@@ -1,0 +1,13 @@
+/* Application Component Overrides & Page Transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: pageEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
