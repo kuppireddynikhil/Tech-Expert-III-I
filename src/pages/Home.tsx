@@ -90,23 +90,56 @@ export const Home: React.FC = () => {
         </p>
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '0.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem',
+            marginTop: '0.5rem'
+          }}
+        >
           {user ? (
-            <Link to={isAdmin ? "/admin/dashboard" : "/dashboard"} className="btn btn-primary btn-lg">
+            <Link
+              to={isAdmin ? "/admin/dashboard" : "/dashboard"}
+              className="btn btn-primary btn-lg"
+            >
               {isAdmin ? "Open Admin Control Center" : "Enter Participant Dashboard"}
               <ArrowRight size={18} />
             </Link>
           ) : (
             <>
-              <Link to="/register" className="btn btn-primary btn-lg">
-                Register
+              <Link
+                to="/register"
+                className="btn btn-primary btn-lg"
+                style={{
+                  width: '250px',
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  fontSize: '20px'
+                }}
+              >
+                Register Now
                 <ArrowRight size={18} />
               </Link>
-              <br></br>
-              <Link to="/login" className="btn btn-secondary btn-lg">
+
+              <Link
+                to="/login"
+                className="btn btn-secondary btn-lg"
+                style={{
+                  width: '220px',
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px'
+                }}
+              >
                 Login
               </Link>
-              <br></br>
             </>
           )}
         </div>
