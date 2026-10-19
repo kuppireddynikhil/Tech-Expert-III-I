@@ -7,7 +7,8 @@ import Editor from '@monaco-editor/react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { CountdownTimer } from '../components/common/CountdownTimer';
-import type { Question, PhaseControl, AIResponse } from '../types';
+import confetti from 'canvas-confetti';
+import type { Question, PhaseControl, AIResponse, CompetitionSession } from '../types';
 import {
   Code2,
   Play,
@@ -19,7 +20,10 @@ import {
   Cpu,
   Layers,
   ArrowRight,
-  RotateCcw
+  RotateCcw,
+  Sparkles,
+  Trophy,
+  Lock
 } from 'lucide-react';
 
 export const Phase2: React.FC = () => {
@@ -33,17 +37,13 @@ export const Phase2: React.FC = () => {
   const [evaluating, setEvaluating] = useState(false);
   const [evalResults, setEvalResults] = useState<Record<string, AIResponse>>({});
   const [solvedQuestions, setSolvedQuestions] = useState<Record<string, boolean>>({});
+  const [session, setSession] = useState<CompetitionSession | null>(null);
+  const [phaseStartTime, setPhaseStartTime] = useState<number>(Date.now());
+  const [isExpired, setIsExpired] = useState(false);
+  const [isClosed, setIsClosed] = useState(false);
+  const [celebrated, setCelebrated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // 15 Minutes Phase Deadline Start Time
-  const [phaseStartTime] = useState<number>(() => {
-    const stored = localStorage.getItem('svce_phase2_start');
-    if (stored) return parseInt(stored, 10);
-    const now = Date.now();
-    localStorage.setItem('svce_phase2_start', now.toString());
-    return now;
-  });
 
   useEffect(() => {
     async function loadPhase2() {
@@ -52,10 +52,41 @@ export const Phase2: React.FC = () => {
         const p2 = controls.phase2;
         setPhaseControl(p2);
 
+        if (p2.status === 'closed') {
+          setIsClosed(true);
+          setIsExpired(true);
+          setError('Phase 2 has concluded and was closed by the administrator. Submissions are no longer accepted.');
+          setLoading(false);
+          return;
+        }
+
         if (p2.status !== 'active') {
           setError(`Phase 2 is currently ${p2.status}. The event administrator must activate Phase 2 to allow submissions.`);
           setLoading(false);
           return;
+        }
+
+        const qualification = await api.getMyQualification('phase2');
+        if (qualification === 'not_published') {
+          setError('The administrator has not yet published the list of participants advancing to Phase 2. Please wait for the announcement.');
+          setLoading(false);
+          return;
+        }
+        if (qualification === 'not_qualified') {
+          setError('You have not been selected to advance to Phase 2. Thank you for participating!');
+          setLoading(false);
+          return;
+        }
+
+        // Authoritative server-side session tracking
+        const { session: currentSession } = await api.getOrCreateSession('phase2');
+        setSession(currentSession);
+        const startedAtMs = currentSession.started_at ? new Date(currentSession.started_at).getTime() : Date.now();
+        setPhaseStartTime(startedAtMs);
+
+        const deadlineMinutes = p2.total_deadline_minutes || 15;
+        if (Date.now() - startedAtMs >= deadlineMinutes * 60 * 1000) {
+          setIsExpired(true);
         }
 
         const set = await api.getParticipantAssignedSet('phase2');
@@ -63,12 +94,25 @@ export const Phase2: React.FC = () => {
         const qs = set.questions || [];
         setQuestions(qs);
 
-        // Initialize code map with starter code
+        // Restore previous submissions, attempts, and solved state
+        const { attempts, latestRuns } = await api.getParticipantProgramAttempts('phase2');
         const initialMap: Record<string, string> = {};
+        const initialSolved: Record<string, boolean> = {};
+        const initialResults: Record<string, AIResponse> = {};
+
         qs.forEach((q: Question) => {
-          initialMap[q.id] = q.starter_code || '# Write your python code here\n';
+          initialMap[q.id] = latestRuns[q.id]?.submitted_code || q.starter_code || '# Write your python code here\n';
+          if (attempts[q.id]?.is_solved) {
+            initialSolved[q.id] = true;
+          }
+          if (latestRuns[q.id]?.ai_response) {
+            initialResults[q.id] = latestRuns[q.id].ai_response;
+          }
         });
+
         setCodeMap(initialMap);
+        setSolvedQuestions(initialSolved);
+        setEvalResults(initialResults);
 
       } catch (err: any) {
         console.error('Failed to load Phase 2:', err);
@@ -80,22 +124,64 @@ export const Phase2: React.FC = () => {
     loadPhase2();
   }, []);
 
+  // Periodic Phase Status and Force Closure Check
+  useEffect(() => {
+    if (loading || isClosed) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const controls = await api.getPhaseControls();
+        const p2 = controls.phase2;
+        if (p2 && p2.status === 'closed') {
+          setIsClosed(true);
+          setIsExpired(true);
+          setPhaseControl(p2);
+          localStorage.removeItem('svce_phase2_start');
+          if (session) {
+            api.lockSession(session.id, 'Phase 2 was formally closed by administrator.').catch(console.error);
+          }
+        }
+      } catch (err) {
+        // network error
+      }
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [loading, isClosed, session]);
+
   const currentQ = questions[activeQuestionIndex];
+  const isCurrentSolved = currentQ ? Boolean(solvedQuestions[currentQ.id]) : false;
+  const allSolved = questions.length > 0 && questions.every(q => solvedQuestions[q.id]);
+
+  useEffect(() => {
+    if (allSolved && !celebrated) {
+      setCelebrated(true);
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+      if (session && session.status !== 'completed') {
+        const totalPoints = questions.reduce((sum, q) => sum + (q.scoring_points || 0), 0);
+        api.completeSession(session.id, totalPoints).catch(console.error);
+      }
+    }
+  }, [allSolved, celebrated, session, questions]);
 
   const handleCodeChange = (val: string | undefined) => {
-    if (!currentQ || val === undefined) return;
+    if (!currentQ || val === undefined || isCurrentSolved || isExpired) return;
     setCodeMap(prev => ({ ...prev, [currentQ.id]: val }));
   };
 
   const handleResetToStarter = () => {
-    if (!currentQ) return;
+    if (!currentQ || isCurrentSolved || isExpired) return;
     if (confirm('Reset your code to the initial starter program?')) {
       setCodeMap(prev => ({ ...prev, [currentQ.id]: currentQ.starter_code }));
     }
   };
 
   const handleRunEvaluation = async () => {
-    if (!currentQ || evaluating) return;
+    if (!currentQ || evaluating || isCurrentSolved || isExpired) return;
 
     setEvaluating(true);
     const code = codeMap[currentQ.id] || '';
@@ -199,12 +285,82 @@ export const Phase2: React.FC = () => {
 
         {/* Phase-wide 15 Minutes Countdown Timer */}
         <CountdownTimer
-          durationSeconds={15 * 60}
+          durationSeconds={(phaseControl?.total_deadline_minutes || 15) * 60}
           startTimeMs={phaseStartTime}
           label="Phase 2 Total Deadline"
           size="md"
+          onExpire={() => setIsExpired(true)}
+          isReset={isClosed || phaseControl?.status === 'closed'}
         />
       </div>
+
+      {/* Forced Closure Banner */}
+      {(isClosed || phaseControl?.status === 'closed') && (
+        <div className="glass-card" style={{
+          padding: '1.25rem 1.5rem',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          border: '1px solid var(--rose-400)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.85rem'
+        }}>
+          <Lock size={24} color="var(--rose-400)" style={{ flexShrink: 0 }} />
+          <div>
+            <h4 style={{ color: '#FFFFFF', margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+              Phase 2 Concluded & Submissions Locked
+            </h4>
+            <p style={{ color: 'var(--rose-200)', margin: '0.2rem 0 0 0', fontSize: '0.85rem' }}>
+              The event administrator has closed Phase 2. The phase timer is reset to 00:00, and all participant screens are locked.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Completion Banner */}
+      {allSolved && (
+        <div className="glass-card" style={{
+          padding: '1.25rem 1.5rem',
+          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+          border: '1px solid var(--emerald-400)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Trophy size={28} color="var(--emerald-400)" />
+            <div>
+              <h4 style={{ color: '#FFFFFF', margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+                All Phase 2 Programs Successfully Solved!
+              </h4>
+              <p style={{ color: 'var(--emerald-200)', margin: '0.2rem 0 0 0', fontSize: '0.8rem' }}>
+                Outstanding work! Your code has met all evaluation rubrics. Check the leaderboard and wait for Phase 3 finalists list.
+              </p>
+            </div>
+          </div>
+          <Link to="/dashboard" className="btn btn-secondary btn-sm">
+            View Dashboard & Leaderboard <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
+
+      {/* Expiration Banner */}
+      {isExpired && !allSolved && (
+        <div className="glass-card" style={{
+          padding: '1rem 1.5rem',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          border: '1px solid var(--rose-400)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem'
+        }}>
+          <AlertTriangle size={20} color="var(--rose-400)" />
+          <span style={{ color: '#FFFFFF', fontSize: '0.875rem' }}>
+            The 15-minute deadline for Phase 2 has expired. Code execution is now concluded.
+          </span>
+        </div>
+      )}
 
       {/* Question Selector Tabs */}
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -306,6 +462,7 @@ export const Phase2: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <button
                     onClick={handleResetToStarter}
+                    disabled={isClosed || Boolean(phaseControl?.status === 'closed') || isCurrentSolved || isExpired}
                     className="btn btn-secondary btn-sm"
                     title="Reset to original faulty code"
                   >
@@ -314,14 +471,26 @@ export const Phase2: React.FC = () => {
 
                   <button
                     onClick={handleRunEvaluation}
-                    disabled={evaluating}
-                    className="btn btn-accent btn-sm"
+                    disabled={isClosed || Boolean(phaseControl?.status === 'closed') || evaluating || isCurrentSolved || isExpired}
+                    className={`btn ${isCurrentSolved ? 'btn-success' : 'btn-accent'} btn-sm`}
                     style={{ padding: '0.45rem 1rem' }}
                   >
                     {evaluating ? (
                       <>
                         <span className="spinner" style={{ width: '14px', height: '14px', border: '2px solid #FFF', borderTopColor: 'transparent', borderRadius: '50%' }} />
                         Simulating Python Execution...
+                      </>
+                    ) : isClosed || phaseControl?.status === 'closed' ? (
+                      <>
+                        <Lock size={14} /> Phase Closed & Locked
+                      </>
+                    ) : isCurrentSolved ? (
+                      <>
+                        <CheckCircle2 size={14} color="#FFFFFF" /> Program Solved (+{currentQ?.scoring_points} PTS)
+                      </>
+                    ) : isExpired ? (
+                      <>
+                        <Clock size={14} /> Phase Time Expired
                       </>
                     ) : (
                       <>
@@ -342,6 +511,7 @@ export const Phase2: React.FC = () => {
                   value={codeMap[currentQ.id] || ''}
                   onChange={handleCodeChange}
                   options={{
+                    readOnly: isClosed || Boolean(phaseControl?.status === 'closed') || isCurrentSolved || isExpired,
                     minimap: { enabled: false },
                     fontSize: 14,
                     lineNumbers: 'on',

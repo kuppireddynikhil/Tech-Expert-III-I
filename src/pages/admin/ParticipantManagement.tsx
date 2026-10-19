@@ -96,6 +96,28 @@ export const ParticipantManagement: React.FC = () => {
     }
   };
 
+  const [activatingAll, setActivatingAll] = useState(false);
+
+  const handleActivateAll = async () => {
+    const targets = filtered.filter(p => p.registration_status !== 'active' && p.registration_status !== 'disqualified');
+    if (targets.length === 0) {
+      alert('No participants to activate. (Disqualified participants are never activated in bulk.)');
+      return;
+    }
+    if (!confirm(`Activate ${targets.length} participant(s) currently shown in the list? Disqualified participants are skipped.`)) return;
+
+    setActivatingAll(true);
+    try {
+      const count = await api.activateParticipants(targets.map(t => t.user_id), 'Bulk activation by administrator');
+      alert(`Activated ${count} participant(s).`);
+      await loadData();
+    } catch (err: any) {
+      alert(`Failed to activate participants: ${err.message}`);
+    } finally {
+      setActivatingAll(false);
+    }
+  };
+
   const pendingReentries = sessions.filter(s => s.reentry_status === 'requested');
 
   const filtered = participants.filter((p) => {
@@ -257,6 +279,18 @@ export const ParticipantManagement: React.FC = () => {
             <option value="disqualified">Disqualified</option>
           </select>
         </div>
+
+        {/* Bulk activation */}
+        <button
+          onClick={handleActivateAll}
+          disabled={activatingAll || loading}
+          className="btn btn-success"
+          style={{ marginLeft: 'auto' }}
+          title="Activate every shown participant that is not already active or disqualified"
+        >
+          <UserCheck size={16} />
+          {activatingAll ? 'Activating...' : 'Activate All'}
+        </button>
       </div>
 
       {/* Participants Table */}

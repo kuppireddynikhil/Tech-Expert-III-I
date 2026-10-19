@@ -6,7 +6,8 @@ import { Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import type { Question, PhaseControl, AIResponse } from '../types';
+import { CountdownTimer } from '../components/common/CountdownTimer';
+import type { Question, PhaseControl, AIResponse, CompetitionSession } from '../types';
 import confetti from 'canvas-confetti';
 import {
   Trophy,
@@ -34,6 +35,9 @@ export const Phase3: React.FC = () => {
   const [attemptsMap, setAttemptsMap] = useState<Record<string, { attempts_used: number; is_solved: boolean; is_locked: boolean }>>({});
   const [evaluating, setEvaluating] = useState(false);
   const [evalResults, setEvalResults] = useState<Record<string, AIResponse>>({});
+  const [session, setSession] = useState<CompetitionSession | null>(null);
+  const [phaseStartTime, setPhaseStartTime] = useState<number>(Date.now());
+  const [isClosed, setIsClosed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [winnerCelebrated, setWinnerCelebrated] = useState(false);
@@ -45,28 +49,63 @@ export const Phase3: React.FC = () => {
         const p3 = controls.phase3;
         setPhaseControl(p3);
 
+        if (p3.status === 'closed') {
+          setIsClosed(true);
+          setError('Phase 3 has concluded and was closed by the administrator. All finalist submissions are locked.');
+          setLoading(false);
+          return;
+        }
+
         if (p3.status !== 'active') {
           setError(`Phase 3 is currently ${p3.status}. The event administrator must activate Phase 3 to begin the finals.`);
           setLoading(false);
           return;
         }
 
+        const qualification = await api.getMyQualification('phase3');
+        if (qualification === 'not_published') {
+          setError('The administrator has not yet published the list of participants advancing to Phase 3. Please wait for the announcement.');
+          setLoading(false);
+          return;
+        }
+        if (qualification === 'not_qualified') {
+          setError('You have not been selected to advance to Phase 3. Thank you for participating!');
+          setLoading(false);
+          return;
+        }
+
+        // Authoritative server-side session tracking
+        const { session: currentSession } = await api.getOrCreateSession('phase3');
+        setSession(currentSession);
+        const startedAtMs = currentSession.started_at ? new Date(currentSession.started_at).getTime() : Date.now();
+        setPhaseStartTime(startedAtMs);
+
         const set = await api.getParticipantAssignedSet('phase3');
         setQuestionSet(set);
         const qs = set.questions || [];
         setQuestions(qs);
 
-        // Initialize code map and attempt state
+        // Restore previous submissions, attempt counters, and solved/locked state
+        const { attempts, latestRuns } = await api.getParticipantProgramAttempts('phase3');
         const initialCode: Record<string, string> = {};
         const initialAttempts: Record<string, { attempts_used: number; is_solved: boolean; is_locked: boolean }> = {};
+        const initialResults: Record<string, AIResponse> = {};
 
         qs.forEach((q: Question) => {
-          initialCode[q.id] = q.starter_code || '# Write your logic implementation here\n';
-          initialAttempts[q.id] = { attempts_used: 0, is_solved: false, is_locked: false };
+          initialCode[q.id] = latestRuns[q.id]?.submitted_code || q.starter_code || '# Write your logic implementation here\n';
+          const att = attempts[q.id];
+          const used = att?.attempts_used ?? 0;
+          const solved = Boolean(att?.is_solved);
+          const locked = Boolean(att?.is_locked) || (!solved && used >= 3);
+          initialAttempts[q.id] = { attempts_used: used, is_solved: solved, is_locked: locked };
+          if (latestRuns[q.id]?.ai_response) {
+            initialResults[q.id] = latestRuns[q.id].ai_response;
+          }
         });
 
         setCodeMap(initialCode);
         setAttemptsMap(initialAttempts);
+        setEvalResults(initialResults);
 
       } catch (err: any) {
         console.error('Failed to load Phase 3:', err);
@@ -77,6 +116,29 @@ export const Phase3: React.FC = () => {
     }
     loadPhase3();
   }, []);
+
+  // Periodic Phase Status & Force Closure Check
+  useEffect(() => {
+    if (loading || isClosed) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const controls = await api.getPhaseControls();
+        const p3 = controls.phase3;
+        if (p3 && p3.status === 'closed') {
+          setIsClosed(true);
+          setPhaseControl(p3);
+          if (session) {
+            api.lockSession(session.id, 'Phase 3 was formally closed by administrator.').catch(console.error);
+          }
+        }
+      } catch (err) {
+        // network error
+      }
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [loading, isClosed, session]);
 
   const currentQ = questions[activeQuestionIndex];
   const currentAttempt = currentQ ? (attemptsMap[currentQ.id] || { attempts_used: 0, is_solved: false, is_locked: false }) : null;
@@ -94,17 +156,28 @@ export const Phase3: React.FC = () => {
         spread: 90,
         origin: { y: 0.5 }
       });
+      if (session && session.status !== 'completed') {
+        const totalPoints = questions.reduce((sum, q) => sum + (q.scoring_points || 0), 0);
+        api.completeSession(session.id, totalPoints).catch(console.error);
+      }
     }
-  }, [isAllSolved, winnerCelebrated]);
+  }, [isAllSolved, winnerCelebrated, session, questions]);
 
   const handleCodeChange = (val: string | undefined) => {
     if (!currentQ || val === undefined) return;
-    if (currentAttempt?.is_locked || currentAttempt?.is_solved) return;
+    if (currentAttempt?.is_locked || currentAttempt?.is_solved || isClosed || phaseControl?.status === 'closed') return;
     setCodeMap(prev => ({ ...prev, [currentQ.id]: val }));
   };
 
+  const handleResetToStarter = () => {
+    if (!currentQ || currentAttempt?.is_locked || currentAttempt?.is_solved || isClosed || phaseControl?.status === 'closed') return;
+    if (confirm('Reset your code to the starter code template?')) {
+      setCodeMap(prev => ({ ...prev, [currentQ.id]: currentQ.starter_code || '# Write your logic implementation here\n' }));
+    }
+  };
+
   const handleRunEvaluation = async () => {
-    if (!currentQ || evaluating) return;
+    if (!currentQ || evaluating || isClosed || phaseControl?.status === 'closed') return;
     if (currentAttempt?.is_locked) {
       alert('This program is permanently locked after 3 unsuccessful attempts.');
       return;
@@ -224,8 +297,16 @@ export const Phase3: React.FC = () => {
           </div>
         </div>
 
-        {/* Global Progress Indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {/* Phase Countdown Timer & Global Progress Indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <CountdownTimer
+            durationSeconds={(phaseControl?.total_deadline_minutes || 30) * 60}
+            startTimeMs={phaseStartTime}
+            label="Finals Deadline"
+            size="md"
+            isReset={isClosed || phaseControl?.status === 'closed'}
+          />
+
           <div style={{
             backgroundColor: 'rgba(0, 0, 0, 0.4)',
             padding: '0.5rem 1rem',
@@ -242,6 +323,28 @@ export const Phase3: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Forced Closure Banner */}
+      {(isClosed || phaseControl?.status === 'closed') && (
+        <div className="glass-card" style={{
+          padding: '1.25rem 1.5rem',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          border: '1px solid var(--rose-400)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.85rem'
+        }}>
+          <Lock size={24} color="var(--rose-400)" style={{ flexShrink: 0 }} />
+          <div>
+            <h4 style={{ color: '#FFFFFF', margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+              Phase 3 Finals Concluded & Submissions Locked
+            </h4>
+            <p style={{ color: 'var(--rose-200)', margin: '0.2rem 0 0 0', fontSize: '0.85rem' }}>
+              The event administrator has closed Phase 3. Submissions are finalized, the timer is reset to 00:00, and all editor inputs are locked.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Completion Banner */}
       {isAllSolved && (
@@ -403,12 +506,25 @@ export const Phase3: React.FC = () => {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <button
+                    onClick={handleResetToStarter}
+                    disabled={Boolean(currentAttempt?.is_locked) || Boolean(currentAttempt?.is_solved) || isClosed || Boolean(phaseControl?.status === 'closed')}
+                    className="btn btn-secondary btn-sm"
+                    title="Reset to starter code"
+                  >
+                    <RotateCcw size={13} /> Reset
+                  </button>
+
+                  <button
                     onClick={handleRunEvaluation}
-                    disabled={evaluating || Boolean(currentAttempt?.is_locked) || Boolean(currentAttempt?.is_solved)}
+                    disabled={evaluating || Boolean(currentAttempt?.is_locked) || Boolean(currentAttempt?.is_solved) || isClosed || Boolean(phaseControl?.status === 'closed')}
                     className="btn btn-primary btn-sm"
                     style={{ padding: '0.45rem 1.25rem' }}
                   >
-                    {evaluating ? (
+                    {isClosed || phaseControl?.status === 'closed' ? (
+                      <>
+                        <Lock size={14} /> Finals Closed & Locked
+                      </>
+                    ) : evaluating ? (
                       <>
                         <span className="spinner" style={{ width: '14px', height: '14px', border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%' }} />
                         Gemini Evaluating Code...
@@ -436,7 +552,7 @@ export const Phase3: React.FC = () => {
                     fontSize: 14,
                     lineNumbers: 'on',
                     scrollBeyondLastLine: false,
-                    readOnly: Boolean(currentAttempt?.is_locked) || Boolean(currentAttempt?.is_solved),
+                    readOnly: Boolean(currentAttempt?.is_locked) || Boolean(currentAttempt?.is_solved) || isClosed || Boolean(phaseControl?.status === 'closed'),
                     automaticLayout: true,
                     tabSize: 4,
                     insertSpaces: true,

@@ -1,7 +1,7 @@
 // TECH EXPERT 2K26 — PHASE 1: PYTHON QUICK QUIZ
 // Sri Venkateswara College of Engineering (SVCE)
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,15 +13,17 @@ import {
   Clock, 
   CheckCircle2, 
   XCircle, 
-  ArrowRight, 
   AlertTriangle, 
-  Award, 
   Trophy,
   Layers,
   HelpCircle,
   ShieldAlert,
-  RotateCcw
+  RotateCcw,
+  Lock
 } from 'lucide-react';
+
+// How long the revealed answer stays on screen before auto-advancing
+const REVEAL_DURATION_MS = 3000;
 
 export const Phase1: React.FC = () => {
   const { user, profile } = useAuth();
@@ -50,6 +52,11 @@ export const Phase1: React.FC = () => {
   // Authoritative question timer start tracking
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
 
+  // Guards so a question is only finalized / advanced once (declared before loadQuiz)
+  const finalizingRef = useRef<string | null>(null);
+  const selectedChoiceRef = useRef<string | null>(null);
+  selectedChoiceRef.current = selectedChoice;
+
   const loadQuiz = async () => {
     try {
       setLoading(true);
@@ -58,6 +65,13 @@ export const Phase1: React.FC = () => {
       const controls = await api.getPhaseControls();
       const p1 = controls.phase1;
       setPhaseControl(p1);
+
+      if (p1.status === 'closed') {
+        setAccessBlocked(true);
+        setBlockedReason('Phase 1 has concluded and was closed by the administrator. All participant answers have been recorded, and this phase is locked.');
+        setLoading(false);
+        return;
+      }
 
       if (p1.status !== 'active') {
         setError(`Phase 1 is currently ${p1.status}. It must be set to 'active' by the administrator to begin.`);
@@ -127,6 +141,7 @@ export const Phase1: React.FC = () => {
         if (elapsed >= timerSecs) {
           // Timer expired during reload or disconnect: finalize question
           setQuestionStartTime(Date.now() - timerSecs * 1000);
+          finalizingRef.current = currentQ.id;
           api.submitQuizAnswer(currentSession.id, currentQ.id, 'NONE', timerSecs)
             .then(res => {
               setLastResult(res);
@@ -169,17 +184,50 @@ export const Phase1: React.FC = () => {
   const currentQuestion = questions[currentIndex];
   const effectiveTimer = currentQuestion?.custom_timer || currentQuestion?.effective_timer || questionSet?.default_timer || 15;
 
+  // Periodic Phase Status & Force Closure Check
+  useEffect(() => {
+    if (quizCompleted || accessBlocked) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const controls = await api.getPhaseControls();
+        const p1 = controls.phase1;
+        if (p1 && p1.status === 'closed') {
+          // Administrator ended Phase 1 for all participants
+          if (currentQuestion && session && finalizingRef.current !== currentQuestion.id) {
+            finalizingRef.current = currentQuestion.id;
+            const answerToSubmit = selectedChoiceRef.current || 'NONE';
+            api.submitQuizAnswer(session.id, currentQuestion.id, answerToSubmit, effectiveTimer).catch(console.error);
+          }
+          if (session) {
+            api.lockSession(session.id, 'Phase 1 was formally closed by administrator.').catch(console.error);
+          }
+          setPhaseControl(p1);
+          setAccessBlocked(true);
+          setBlockedReason('Phase 1 has been concluded and closed by the administrator. Your exam has been automatically submitted and your screen is locked.');
+          sessionStorage.removeItem(`svce_active_exam_p1_${session?.id}`);
+        }
+      } catch (e) {
+        // network hiccup
+      }
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [quizCompleted, accessBlocked, currentQuestion, session, effectiveTimer]);
+
   const handleSelectChoice = (choiceId: string) => {
     if (submitting || lastResult) return;
     setSelectedChoice(choiceId);
   };
 
   // Triggered STRICTLY when the countdown timer expires
-  const handleTimerExpire = async () => {
-    if (submitting || lastResult || !currentQuestion || !session) return;
+  const handleTimerExpire = useCallback(async () => {
+    if (!currentQuestion || !session) return;
+    if (finalizingRef.current === currentQuestion.id) return;
+    finalizingRef.current = currentQuestion.id;
 
     setSubmitting(true);
-    const answerToSubmit = selectedChoice || 'NONE';
+    const answerToSubmit = selectedChoiceRef.current || 'NONE';
 
     try {
       const response = await api.submitQuizAnswer(
@@ -195,46 +243,41 @@ export const Phase1: React.FC = () => {
         correct_answers: response.correct_answers || []
       });
       setTotalScore(response.total_score);
-
     } catch (err: any) {
       console.error('Error submitting quiz answer:', err);
-      // Fallback response display on error
-      setLastResult({
-        is_correct: false,
-        points_awarded: 0,
-        correct_answers: []
-      });
+      setLastResult({ is_correct: false, points_awarded: 0, correct_answers: [] });
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [currentQuestion, session, effectiveTimer]);
 
-  // Continue to Next Question (Displayed ONLY after timer expires and result finalized)
-  const handleContinue = async () => {
-    if (!session || submitting) return;
+  // Automatic flow: once the answer is revealed (correct answer + wrong selection, if any),
+  // wait briefly and move on to the next question — or finish the exam after the last one.
+  useEffect(() => {
+    if (!lastResult || !session || quizCompleted) return;
 
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < questions.length) {
-      await api.updateSessionProgress(session.id, nextIndex);
-      setCurrentIndex(nextIndex);
-      setSelectedChoice(null);
-      setLastResult(null);
-      setQuestionStartTime(Date.now());
-    }
-  };
+    const timeout = setTimeout(async () => {
+      const nextIndex = currentIndex + 1;
+      try {
+        if (nextIndex < questions.length) {
+          await api.updateSessionProgress(session.id, nextIndex);
+          setCurrentIndex(nextIndex);
+          setSelectedChoice(null);
+          setLastResult(null);
+          setQuestionStartTime(Date.now());
+        } else {
+          await api.completeSession(session.id, totalScore);
+          setQuizCompleted(true);
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+      } catch (err) {
+        console.error('Failed to advance exam:', err);
+      }
+    }, REVEAL_DURATION_MS);
 
-  // Finish Exam Action (Displayed ONLY on the final question after timer expires)
-  const handleFinishExam = async () => {
-    if (!session || submitting) return;
-
-    await api.completeSession(session.id, totalScore);
-    setQuizCompleted(true);
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-  };
+    return () => clearTimeout(timeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastResult]);
 
   // Re-entry Request Handler for Participants
   const handleRequestReentry = async () => {
@@ -316,7 +359,26 @@ export const Phase1: React.FC = () => {
               In accordance with SVCE Tech Expert 2K26 examination governance, re-entry requires explicit administrator authorization.
             </p>
 
-            {session?.reentry_status === 'requested' ? (
+            {phaseControl?.status === 'closed' ? (
+              <div style={{
+                padding: '1.25rem',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid var(--rose-400)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--rose-400)',
+                fontSize: '0.9rem',
+                textAlign: 'center'
+              }}>
+                <Lock size={28} style={{ margin: '0 auto 0.5rem auto' }} />
+                <strong style={{ display: 'block', color: '#FFFFFF', marginBottom: '0.3rem', fontSize: '1rem' }}>
+                  Phase 1 Concluded & Submissions Locked
+                </strong>
+                The event administrator has closed Phase 1 for all participants. All answers have been submitted, and re-entry requests are no longer accepted.
+                <div style={{ marginTop: '0.75rem', fontSize: '1.15rem', fontWeight: 800, color: 'var(--cyan-400)' }}>
+                  Recorded Score: {session?.final_score ?? totalScore} PTS
+                </div>
+              </div>
+            ) : session?.reentry_status === 'requested' ? (
               <div style={{
                 padding: '1rem',
                 backgroundColor: 'rgba(0, 242, 254, 0.1)',
@@ -376,12 +438,17 @@ export const Phase1: React.FC = () => {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <button onClick={checkReentryStatus} className="btn btn-secondary">
-              Refresh Status
-            </button>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {phaseControl?.status !== 'closed' && (
+              <button onClick={checkReentryStatus} className="btn btn-secondary">
+                Refresh Status
+              </button>
+            )}
             <Link to="/dashboard" className="btn btn-secondary">
               &larr; Return to Dashboard
+            </Link>
+            <Link to="/leaderboard" className="btn btn-primary">
+              <Trophy size={16} /> View Leaderboard
             </Link>
           </div>
         </div>
@@ -489,6 +556,7 @@ export const Phase1: React.FC = () => {
           onExpire={handleTimerExpire}
           label="Question Timer"
           size="md"
+          isReset={accessBlocked || phaseControl?.status === 'closed'}
         />
       </div>
 
@@ -638,25 +706,25 @@ export const Phase1: React.FC = () => {
               </div>
             )}
 
-            {/* Continue or Finish Exam button displayed ONLY after timer expires and result finalized */}
+            {/* Result banner — flow advances automatically, no manual button */}
             {lastResult && (
-              currentIndex + 1 < questions.length ? (
-                <button
-                  onClick={handleContinue}
-                  className="btn btn-primary btn-lg"
-                >
-                  Continue
-                  <ArrowRight size={18} />
-                </button>
-              ) : (
-                <button
-                  onClick={handleFinishExam}
-                  className="btn btn-primary btn-lg"
-                >
-                  <Award size={18} />
-                  Finish Exam
-                </button>
-              )
+              <div style={{
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                color: lastResult.is_correct ? 'var(--emerald-400)' : 'var(--rose-400)'
+              }}>
+                {lastResult.is_correct ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                <span>
+                  {lastResult.is_correct
+                    ? `Correct! +${lastResult.points_awarded} pts`
+                    : selectedChoice ? 'Wrong answer' : "Time's up — no answer selected"}
+                  {' · '}
+                  {currentIndex + 1 < questions.length ? 'Next question loading…' : 'Finishing exam…'}
+                </span>
+              </div>
             )}
           </div>
         </div>

@@ -15,7 +15,8 @@ export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
+  const rawFrom = (location.state as any)?.from?.pathname;
+  const from = (rawFrom && rawFrom !== '/login' && rawFrom !== '/admin/login') ? rawFrom : '/dashboard';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

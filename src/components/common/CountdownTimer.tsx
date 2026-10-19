@@ -10,6 +10,7 @@ interface CountdownTimerProps {
   onExpire?: () => void;
   label?: string;
   size?: 'sm' | 'md' | 'lg';
+  isReset?: boolean;       // Forcibly resets and stops timer (e.g. when phase is closed)
 }
 
 export const CountdownTimer: React.FC<CountdownTimerProps> = ({
@@ -17,7 +18,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   startTimeMs,
   onExpire,
   label = 'Time Remaining',
-  size = 'md'
+  size = 'md',
+  isReset = false
 }) => {
   // If no startTimeMs passed, default to when this component mounted (stored in ref so state re-renders don't reset)
   const initialMountTime = useRef(Date.now());
@@ -25,6 +27,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   const deadlineMs = effectiveStart + (durationSeconds * 1000);
 
   const calculateRemaining = () => {
+    if (isReset) return 0;
     const now = Date.now();
     const remaining = Math.max(0, Math.floor((deadlineMs - now) / 1000));
     return remaining;
@@ -34,6 +37,11 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   const expiredRef = useRef(false);
 
   useEffect(() => {
+    if (isReset) {
+      setRemainingSeconds(0);
+      return;
+    }
+
     // Reset expiration flag if duration or start changes
     expiredRef.current = false;
 
@@ -51,20 +59,24 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
     }, 250);
 
     return () => clearInterval(interval);
-  }, [durationSeconds, startTimeMs, onExpire]);
+  }, [durationSeconds, startTimeMs, onExpire, isReset]);
 
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
   const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  const percentLeft = Math.min(100, (remainingSeconds / durationSeconds) * 100);
+  const percentLeft = durationSeconds > 0 ? Math.min(100, (remainingSeconds / durationSeconds) * 100) : 0;
 
   // Status colors
   let colorClass = 'var(--cyan-400)';
   let bgClass = 'rgba(0, 242, 254, 0.1)';
   let borderClass = 'rgba(0, 242, 254, 0.3)';
 
-  if (percentLeft <= 20 || remainingSeconds <= 10) {
+  if (isReset) {
+    colorClass = 'var(--text-dim)';
+    bgClass = 'rgba(15, 23, 42, 0.6)';
+    borderClass = 'var(--border-subtle)';
+  } else if (percentLeft <= 20 || remainingSeconds <= 10) {
     colorClass = 'var(--rose-400)';
     bgClass = 'rgba(244, 63, 94, 0.15)';
     borderClass = 'var(--rose-400)';

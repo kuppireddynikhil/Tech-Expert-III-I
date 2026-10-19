@@ -246,3 +246,18 @@ export interface LeaderboardEntry {
   is_winner?: boolean;
   is_runner_up?: boolean;
 }
+
+export interface AdvancementCandidate {
+  user_id: string;
+  full_name: string;
+  email: string;
+  section: SectionType;
+  academic_year: AcademicYearType;
+  score: number;
+  detail: string;
+  tie_break: number; // lower is better (ms or seconds); used only to break equal scores
+  rank: number;
+  selected: boolean;
+}
+
+export type AdvancementTarget = 'phase2' | 'phase3';

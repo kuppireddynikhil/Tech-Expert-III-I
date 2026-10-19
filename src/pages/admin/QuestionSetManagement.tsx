@@ -10,13 +10,7 @@ import {
   Edit2,
   Trash2,
   Users,
-  CheckCircle2,
-  Clock,
-  ArrowUpDown,
-  Share2,
-  Eye,
-  Sliders,
-  AlertTriangle
+  Share2
 } from 'lucide-react';
 
 export const QuestionSetManagement: React.FC = () => {
@@ -26,12 +20,12 @@ export const QuestionSetManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // Modal States
-  const [activeSetForEdit, setActiveSetForEdit] = useState<QuestionSet | null>(null);
   const [assignModalSet, setAssignModalSet] = useState<QuestionSet | null>(null);
   const [newSetName, setNewSetName] = useState('');
   const [newSetPhase, setNewSetPhase] = useState<PhaseId>('phase1');
   const [newSetDescription, setNewSetDescription] = useState('');
   const [newSetTimer, setNewSetTimer] = useState<number>(15);
+  const [selectedQuestionToAdd, setSelectedQuestionToAdd] = useState<Record<string, string>>({});
 
   // Assignment Modal Inputs
   const [targetType, setTargetType] = useState<'all' | 'section' | 'academic_year' | 'section_year' | 'participant'>('all');
@@ -353,17 +347,33 @@ export const QuestionSetManagement: React.FC = () => {
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                     Add questions from pool ({unassignedQuestions.length} available):
                   </span>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {unassignedQuestions.slice(0, 4).map((q) => (
-                      <button
-                        key={q.id}
-                        onClick={() => handleAddItemToSet(set.id, q.id)}
-                        className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '0.75rem' }}
-                      >
-                        <Plus size={12} /> {q.title.slice(0, 24)}...
-                      </button>
-                    ))}
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <select
+                      className="form-input"
+                      style={{ minWidth: '260px', maxWidth: '420px', fontSize: '0.825rem', padding: '0.4rem 0.6rem' }}
+                      value={selectedQuestionToAdd[set.id] || ''}
+                      onChange={(e) => setSelectedQuestionToAdd(prev => ({ ...prev, [set.id]: e.target.value }))}
+                    >
+                      <option value="">-- Select Question to Add --</option>
+                      {unassignedQuestions.map((q) => (
+                        <option key={q.id} value={q.id}>
+                          {q.title} ({q.difficulty} • {q.scoring_points} pts)
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        const qId = selectedQuestionToAdd[set.id];
+                        if (qId) {
+                          handleAddItemToSet(set.id, qId);
+                          setSelectedQuestionToAdd(prev => ({ ...prev, [set.id]: '' }));
+                        }
+                      }}
+                      disabled={!selectedQuestionToAdd[set.id]}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      <Plus size={14} /> Add Selected Question
+                    </button>
                   </div>
                 </div>
               )}

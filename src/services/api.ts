@@ -16,7 +16,9 @@ import type {
   AcademicYearType,
   PhaseId,
   CompetitionSession,
-  QuizResponse
+  QuizResponse,
+  AdvancementCandidate,
+  AdvancementTarget
 } from '../types';
 
 // Mock state fallback when Supabase is not configured (allows immediate local preview)
@@ -134,6 +136,128 @@ export const api = {
     if (error) throw error;
 
     await this.logAdminAction('UPDATE_PHASE_CONTROL', 'phase_controls', phase, JSON.stringify(updates), adminReason);
+  },
+
+  async endPhaseForEveryone(phase: PhaseId, adminReason?: string): Promise<{ affectedSessions: number }> {
+    if (!isSupabaseConfigured) {
+      mockPhaseControls[phase] = { ...mockPhaseControls[phase], status: 'closed' };
+      let count = 0;
+      Object.values(mockSessions).forEach(s => {
+        if (s.phase === phase && s.status === 'active') {
+          s.status = 'completed';
+          s.is_locked = true;
+          s.ended_at = new Date().toISOString();
+          count++;
+        }
+      });
+      return { affectedSessions: count };
+    }
+
+    const nowIso = new Date().toISOString();
+
+    // 1. Update phase_controls to 'closed'
+    const { error: phaseError } = await supabase
+      .from('phase_controls')
+      .update({ status: 'closed', updated_at: nowIso })
+      .eq('phase', phase);
+
+    if (phaseError) throw phaseError;
+
+    // 2. Fetch all active sessions for this phase
+    const { data: openSessions, error: sessionsError } = await supabase
+      .from('competition_sessions')
+      .select('id, participant_id')
+      .eq('phase', phase)
+      .eq('status', 'active');
+
+    if (sessionsError) console.warn('Error fetching active sessions to close:', sessionsError);
+
+    let affectedCount = 0;
+
+    if (openSessions && openSessions.length > 0) {
+      affectedCount = openSessions.length;
+      const sessionIds = openSessions.map(s => s.id);
+
+      if (phase === 'phase1') {
+        // Calculate score from recorded quiz responses
+        const { data: responses } = await supabase
+          .from('quiz_responses')
+          .select('session_id, points_awarded')
+          .in('session_id', sessionIds);
+
+        const scoreMap: Record<string, number> = {};
+        (responses || []).forEach(r => {
+          scoreMap[r.session_id] = (scoreMap[r.session_id] || 0) + (r.points_awarded || 0);
+        });
+
+        for (const session of openSessions) {
+          const finalScore = scoreMap[session.id] || 0;
+          await supabase
+            .from('competition_sessions')
+            .update({
+              status: 'completed',
+              is_locked: true,
+              ended_at: nowIso,
+              final_score: finalScore,
+              reentry_status: 'rejected',
+              reentry_reason: 'Phase concluded and locked by administrator.'
+            })
+            .eq('id', session.id);
+        }
+      } else {
+        // Phase 2 or Phase 3: compute score from solved program_attempts
+        const { data: attempts } = await supabase
+          .from('program_attempts')
+          .select('participant_id, question_id, is_solved')
+          .eq('phase', phase)
+          .eq('is_solved', true);
+
+        const { data: qs } = await supabase
+          .from('questions')
+          .select('id, scoring_points')
+          .eq('phase', phase);
+
+        const qPointMap: Record<string, number> = {};
+        (qs || []).forEach(q => { qPointMap[q.id] = q.scoring_points || 0; });
+
+        const userScoreMap: Record<string, number> = {};
+        (attempts || []).forEach(a => {
+          userScoreMap[a.participant_id] = (userScoreMap[a.participant_id] || 0) + (qPointMap[a.question_id] || 0);
+        });
+
+        for (const session of openSessions) {
+          const finalScore = userScoreMap[session.participant_id] || 0;
+          await supabase
+            .from('competition_sessions')
+            .update({
+              status: 'completed',
+              is_locked: true,
+              ended_at: nowIso,
+              final_score: finalScore,
+              reentry_status: 'rejected',
+              reentry_reason: 'Phase concluded and locked by administrator.'
+            })
+            .eq('id', session.id);
+        }
+
+        // Lock all program attempts for this phase
+        await supabase
+          .from('program_attempts')
+          .update({ is_locked: true })
+          .eq('phase', phase);
+      }
+    }
+
+    // 3. Log admin action
+    await this.logAdminAction(
+      'FORCE_END_PHASE',
+      'phase_controls',
+      phase,
+      `Phase ${phase.toUpperCase()} was ended for all participants. ${affectedCount} active sessions finalized and locked.`,
+      adminReason || 'Administrator ended phase'
+    );
+
+    return { affectedSessions: affectedCount };
   },
 
   // --------------------------------------------------------------------------
@@ -517,6 +641,178 @@ export const api = {
     await this.logAdminAction('UPDATE_PARTICIPANT_STATUS', 'profiles', userId, `Status changed to ${status}`, reason);
   },
 
+  async activateParticipants(userIds: string[], reason?: string): Promise<number> {
+    if (!isSupabaseConfigured || userIds.length === 0) return 0;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ registration_status: 'active' })
+      .in('user_id', userIds)
+      .select('user_id');
+
+    if (error) throw error;
+
+    const count = data?.length ?? 0;
+    await this.logAdminAction('ACTIVATE_ALL_PARTICIPANTS', 'profiles', 'bulk', `Activated ${count} participant(s)`, reason);
+    return count;
+  },
+
+  // --------------------------------------------------------------------------
+  // Phase Advancement (administrator decides who moves to the next phase)
+  // --------------------------------------------------------------------------
+  async getAdvancementCandidates(target: AdvancementTarget): Promise<{
+    candidates: AdvancementCandidate[];
+    published: boolean;
+    sourceReady: boolean;
+  }> {
+    if (!isSupabaseConfigured) return { candidates: [], published: false, sourceReady: true };
+
+    const { data: profiles, error: pErr } = await supabase
+      .from('profiles')
+      .select('user_id, full_name, email, section, academic_year, registration_status')
+      .eq('registration_status', 'active');
+    if (pErr) throw pErr;
+
+    const { data: existing } = await supabase
+      .from('phase_qualifications')
+      .select('participant_id, qualified')
+      .eq('phase', target);
+    const published = (existing?.length ?? 0) > 0;
+    const selectedSet = new Set((existing || []).filter(e => e.qualified).map(e => e.participant_id));
+
+    let eligibleIds: Set<string> | null = null;
+    let sourceReady = true;
+    const score = new Map<string, number>();
+    const tie = new Map<string, number>();
+    const detail = new Map<string, string>();
+
+    if (target === 'phase2') {
+      const { data: responses } = await supabase
+        .from('quiz_responses')
+        .select('participant_id, points_awarded, is_correct');
+      const { data: sessions } = await supabase
+        .from('competition_sessions')
+        .select('participant_id, started_at, ended_at, status')
+        .eq('phase', 'phase1');
+
+      const correct = new Map<string, number>();
+      (responses || []).forEach(r => {
+        score.set(r.participant_id, (score.get(r.participant_id) || 0) + (r.points_awarded || 0));
+        if (r.is_correct) correct.set(r.participant_id, (correct.get(r.participant_id) || 0) + 1);
+      });
+      (sessions || []).forEach(sn => {
+        const dur = sn.ended_at ? new Date(sn.ended_at).getTime() - new Date(sn.started_at).getTime() : Number.MAX_SAFE_INTEGER;
+        tie.set(sn.participant_id, dur);
+      });
+      correct.forEach((c, id) => detail.set(id, `${c} correct`));
+      eligibleIds = new Set((sessions || []).map(sn => sn.participant_id));
+    } else {
+      const { data: p2Quals } = await supabase
+        .from('phase_qualifications')
+        .select('participant_id')
+        .eq('phase', 'phase2')
+        .eq('qualified', true);
+      sourceReady = (p2Quals?.length ?? 0) > 0;
+      eligibleIds = new Set((p2Quals || []).map(q => q.participant_id));
+
+      const { data: attempts } = await supabase
+        .from('program_attempts')
+        .select('participant_id, is_solved, solved_at, attempts_used')
+        .eq('phase', 'phase2');
+      const solved = new Map<string, number>();
+      (attempts || []).forEach(a => {
+        if (a.is_solved) {
+          solved.set(a.participant_id, (solved.get(a.participant_id) || 0) + 1);
+          score.set(a.participant_id, (score.get(a.participant_id) || 0) + 30);
+          const t = a.solved_at ? new Date(a.solved_at).getTime() : Number.MAX_SAFE_INTEGER;
+          tie.set(a.participant_id, Math.max(tie.get(a.participant_id) || 0, t));
+        }
+      });
+      solved.forEach((c, id) => detail.set(id, `${c} program(s) solved`));
+    }
+
+    const list: AdvancementCandidate[] = (profiles || [])
+      .filter(p => !eligibleIds || eligibleIds.has(p.user_id))
+      .map(p => ({
+        user_id: p.user_id,
+        full_name: p.full_name,
+        email: p.email,
+        section: p.section as SectionType,
+        academic_year: p.academic_year as AcademicYearType,
+        score: score.get(p.user_id) || 0,
+        detail: detail.get(p.user_id) || '—',
+        tie_break: tie.get(p.user_id) ?? Number.MAX_SAFE_INTEGER,
+        rank: 0,
+        selected: selectedSet.has(p.user_id)
+      }));
+
+    list.sort((a, b) =>
+      b.score - a.score || a.tie_break - b.tie_break || a.full_name.localeCompare(b.full_name)
+    );
+    list.forEach((c, i) => { c.rank = i + 1; });
+
+    return { candidates: list, published, sourceReady };
+  },
+
+  async publishAdvancement(
+    target: AdvancementTarget,
+    all: AdvancementCandidate[],
+    selectedIds: string[],
+    limit: number
+  ): Promise<void> {
+    if (!isSupabaseConfigured) return;
+    const chosen = new Set(selectedIds);
+
+    const { error: delErr } = await supabase.from('phase_qualifications').delete().eq('phase', target);
+    if (delErr) throw delErr;
+
+    const rows = all.map(c => ({
+      phase: target,
+      participant_id: c.user_id,
+      qualified: chosen.has(c.user_id),
+      rank: c.rank,
+      score: c.score
+    }));
+    if (rows.length > 0) {
+      const { error } = await supabase.from('phase_qualifications').insert(rows);
+      if (error) throw error;
+    }
+
+    const sourcePhase: PhaseId = target === 'phase2' ? 'phase1' : 'phase2';
+    await supabase.from('phase_controls').update({ qualification_limit: limit }).eq('phase', sourcePhase);
+
+    await this.logAdminAction(
+      'PUBLISH_ADVANCEMENT', 'phase_qualifications', target,
+      `${chosen.size} participant(s) advanced to ${target}`, `Advancement limit ${limit}`
+    );
+  },
+
+  async clearAdvancement(target: AdvancementTarget): Promise<void> {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.from('phase_qualifications').delete().eq('phase', target);
+    if (error) throw error;
+    await this.logAdminAction('CLEAR_ADVANCEMENT', 'phase_qualifications', target, `Advancement list for ${target} withdrawn`);
+  },
+
+  /** 'qualified' | 'not_published' | 'not_qualified' for the logged-in participant */
+  async getMyQualification(phase: AdvancementTarget): Promise<'qualified' | 'not_published' | 'not_qualified'> {
+    if (!isSupabaseConfigured) return 'qualified';
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user.id;
+    if (!uid) return 'not_qualified';
+
+    const { data: published } = await supabase.rpc('phase_qualification_published', { p_phase: phase });
+    if (!published) return 'not_published';
+
+    const { data } = await supabase
+      .from('phase_qualifications')
+      .select('qualified')
+      .eq('phase', phase)
+      .eq('participant_id', uid)
+      .maybeSingle();
+    return data?.qualified ? 'qualified' : 'not_qualified';
+  },
+
   // --------------------------------------------------------------------------
   // Competition Submissions & Participant View
   // --------------------------------------------------------------------------
@@ -889,24 +1185,96 @@ export const api = {
     }
 
     // Call Supabase Edge Function 'submit-run'
-    const { data: session } = await supabase.auth.getSession();
-    const token = session.session?.access_token;
+    let { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      const refreshed = await supabase.auth.refreshSession();
+      sessionData = refreshed.data as any;
+    }
+    const token = sessionData.session?.access_token;
+    if (!token) {
+      throw new Error('Your login session has expired. Please log out and log in again.');
+    }
 
-    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-run`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch {
+      throw new Error(
+        'Could not reach the evaluation service (submit-run). Make sure the edge functions are deployed: ' +
+        '`supabase functions deploy submit-run ai-evaluate`, and that GEMINI_API_KEY is set as a function secret.'
+      );
+    }
 
-    const result = await response.json();
+    const result = await response.json().catch(() => ({}));
     if (!response.ok) {
       throw new Error(result.error || result.details || 'Code evaluation request failed');
     }
 
     return result;
+  },
+
+  async getParticipantProgramAttempts(phase: 'phase2' | 'phase3'): Promise<{
+    attempts: Record<string, { attempts_used: number; is_solved: boolean; is_locked: boolean }>;
+    latestRuns: Record<string, { submitted_code: string; ai_response: any; is_accepted: boolean; created_at: string }>;
+  }> {
+    if (!isSupabaseConfigured) {
+      return { attempts: {}, latestRuns: {} };
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { attempts: {}, latestRuns: {} };
+
+    const { data: attemptsData, error: attemptsError } = await supabase
+      .from('program_attempts')
+      .select('question_id, attempts_used, is_solved, is_locked')
+      .eq('participant_id', user.id)
+      .eq('phase', phase);
+
+    if (attemptsError) {
+      console.warn('Error fetching participant attempts:', attemptsError);
+    }
+
+    const { data: runsData, error: runsError } = await supabase
+      .from('run_results')
+      .select('question_id, submitted_code, ai_response, is_accepted, created_at')
+      .eq('participant_id', user.id)
+      .eq('phase', phase)
+      .order('created_at', { ascending: false });
+
+    if (runsError) {
+      console.warn('Error fetching participant run results:', runsError);
+    }
+
+    const attempts: Record<string, { attempts_used: number; is_solved: boolean; is_locked: boolean }> = {};
+    for (const item of (attemptsData || [])) {
+      attempts[item.question_id] = {
+        attempts_used: item.attempts_used,
+        is_solved: item.is_solved,
+        is_locked: item.is_locked
+      };
+    }
+
+    const latestRuns: Record<string, { submitted_code: string; ai_response: any; is_accepted: boolean; created_at: string }> = {};
+    for (const run of (runsData || [])) {
+      if (!latestRuns[run.question_id]) {
+        latestRuns[run.question_id] = {
+          submitted_code: run.submitted_code,
+          ai_response: run.ai_response,
+          is_accepted: run.is_accepted,
+          created_at: run.created_at
+        };
+      }
+    }
+
+    return { attempts, latestRuns };
   },
 
   // --------------------------------------------------------------------------

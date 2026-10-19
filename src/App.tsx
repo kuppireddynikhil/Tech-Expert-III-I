@@ -25,6 +25,7 @@ import { Phase3 } from './pages/Phase3';
 // Admin Pages
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { PhaseAdvancement } from './pages/admin/PhaseAdvancement';
 import { QuestionBank } from './pages/admin/QuestionBank';
 import { QuestionEditor } from './pages/admin/QuestionEditor';
 import { QuestionSetManagement } from './pages/admin/QuestionSetManagement';
@@ -71,6 +72,7 @@ export function App() {
             <Route path="phases" element={<PhaseManagement />} />
             <Route path="timers" element={<TimerConfiguration />} />
             <Route path="participants" element={<ParticipantManagement />} />
+            <Route path="advancement" element={<PhaseAdvancement />} />
             <Route path="evaluations" element={<EvaluationReview />} />
             <Route path="leaderboard" element={<LeaderboardManagement />} />
             <Route path="audit-logs" element={<AuditLogs />} />

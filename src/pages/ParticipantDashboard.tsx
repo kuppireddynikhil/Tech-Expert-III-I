@@ -173,8 +173,8 @@ export const ParticipantDashboard: React.FC = () => {
             }}>
               <Zap size={22} color="var(--cyan-400)" />
             </div>
-            <span className={`badge ${phases?.phase1?.status === 'active' ? 'badge-emerald' : 'badge-cyan'}`}>
-              {phases?.phase1?.status?.toUpperCase()}
+            <span className={`badge ${phases?.phase1?.status === 'active' ? 'badge-emerald' : phases?.phase1?.status === 'closed' ? 'badge-rose' : 'badge-cyan'}`}>
+              {phases?.phase1?.status === 'closed' ? 'CLOSED & LOCKED' : phases?.phase1?.status?.toUpperCase()}
             </span>
           </div>
 
@@ -198,11 +198,22 @@ export const ParticipantDashboard: React.FC = () => {
           <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
             <Link
               to="/phase1"
-              className={`btn ${phases?.phase1?.status === 'active' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ width: '100%' }}
+              className={`btn ${phases?.phase1?.status === 'active' ? 'btn-primary' : phases?.phase1?.status === 'closed' ? 'btn-secondary' : 'btn-secondary'}`}
+              style={{ width: '100%', borderColor: phases?.phase1?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined }}
             >
-              {phases?.phase1?.status === 'active' ? 'Start Quick Quiz' : 'View Quick Quiz'}
-              <ArrowRight size={15} />
+              {phases?.phase1?.status === 'active' ? (
+                <>
+                  Start Quick Quiz <ArrowRight size={15} />
+                </>
+              ) : phases?.phase1?.status === 'closed' ? (
+                <>
+                  <Lock size={15} color="var(--rose-400)" /> Phase 1 Closed (Locked)
+                </>
+              ) : (
+                <>
+                  View Quick Quiz <ArrowRight size={15} />
+                </>
+              )}
             </Link>
           </div>
         </div>
@@ -221,8 +232,8 @@ export const ParticipantDashboard: React.FC = () => {
             }}>
               <Code2 size={22} color="var(--purple-400)" />
             </div>
-            <span className={`badge ${phases?.phase2?.status === 'active' ? 'badge-emerald' : 'badge-purple'}`}>
-              {phases?.phase2?.status?.toUpperCase()}
+            <span className={`badge ${phases?.phase2?.status === 'active' ? 'badge-emerald' : phases?.phase2?.status === 'closed' ? 'badge-rose' : 'badge-purple'}`}>
+              {phases?.phase2?.status === 'closed' ? 'CLOSED & LOCKED' : phases?.phase2?.status?.toUpperCase()}
             </span>
           </div>
 
@@ -247,10 +258,21 @@ export const ParticipantDashboard: React.FC = () => {
             <Link
               to="/phase2"
               className={`btn ${phases?.phase2?.status === 'active' ? 'btn-accent' : 'btn-secondary'}`}
-              style={{ width: '100%' }}
+              style={{ width: '100%', borderColor: phases?.phase2?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined }}
             >
-              {phases?.phase2?.status === 'active' ? 'Enter Debug Challenge' : 'View Debug Challenge'}
-              <ArrowRight size={15} />
+              {phases?.phase2?.status === 'active' ? (
+                <>
+                  Enter Debug Challenge <ArrowRight size={15} />
+                </>
+              ) : phases?.phase2?.status === 'closed' ? (
+                <>
+                  <Lock size={15} color="var(--rose-400)" /> Phase 2 Closed (Locked)
+                </>
+              ) : (
+                <>
+                  View Debug Challenge <ArrowRight size={15} />
+                </>
+              )}
             </Link>
           </div>
         </div>
@@ -269,8 +291,8 @@ export const ParticipantDashboard: React.FC = () => {
             }}>
               <Trophy size={22} color="var(--amber-400)" />
             </div>
-            <span className={`badge ${phases?.phase3?.status === 'active' ? 'badge-emerald' : 'badge-rose'}`}>
-              {phases?.phase3?.status?.toUpperCase()}
+            <span className={`badge ${phases?.phase3?.status === 'active' ? 'badge-emerald' : phases?.phase3?.status === 'closed' ? 'badge-rose' : 'badge-rose'}`}>
+              {phases?.phase3?.status === 'closed' ? 'CLOSED & LOCKED' : phases?.phase3?.status?.toUpperCase()}
             </span>
           </div>
 
@@ -296,10 +318,21 @@ export const ParticipantDashboard: React.FC = () => {
             <Link
               to="/phase3"
               className={`btn ${phases?.phase3?.status === 'active' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ width: '100%' }}
+              style={{ width: '100%', borderColor: phases?.phase3?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined }}
             >
-              {phases?.phase3?.status === 'active' ? 'Enter Logic Builder' : 'View Logic Builder'}
-              <ArrowRight size={15} />
+              {phases?.phase3?.status === 'active' ? (
+                <>
+                  Enter Logic Builder <ArrowRight size={15} />
+                </>
+              ) : phases?.phase3?.status === 'closed' ? (
+                <>
+                  <Lock size={15} color="var(--rose-400)" /> Phase 3 Closed (Locked)
+                </>
+              ) : (
+                <>
+                  View Logic Builder <ArrowRight size={15} />
+                </>
+              )}
             </Link>
           </div>
         </div>
