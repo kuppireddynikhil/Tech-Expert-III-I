@@ -2,7 +2,7 @@
 // Sri Venkateswara College of Engineering (SVCE)
 
 import React from 'react';
-import { Terminal, ShieldCheck, Cpu } from 'lucide-react';
+import { ShieldCheck, Cpu } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -27,7 +27,30 @@ export const Footer: React.FC = () => {
           gap: '1rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Terminal size={20} color="var(--cyan-400)" />
+            <div style={{
+              width: '26px',
+              height: '26px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1.5px solid rgba(0, 242, 254, 0.5)',
+              boxShadow: '0 0 8px rgba(0, 242, 254, 0.3)',
+              backgroundColor: '#070B14',
+              flexShrink: 0
+            }}>
+              <img
+                src="/logo.png"
+                alt="Tech Expert Logo"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '50%'
+                }}
+              />
+            </div>
             <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: '#FFFFFF', fontSize: '1rem' }}>
               TECH EXPERT 2K26
             </span>
@@ -36,11 +59,8 @@ export const Footer: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', fontSize: '0.8rem' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--emerald-400)' }}>
-              <ShieldCheck size={14} /> Server RLS Protected
-            </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--purple-400)' }}>
-              <Cpu size={14} /> Gemini AI Code Evaluation Engine
+              <Cpu size={14} /> Gemini Code Evaluation Engine
             </span>
           </div>
         </div>
@@ -48,7 +68,7 @@ export const Footer: React.FC = () => {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           borderTop: '1px solid rgba(255, 255, 255, 0.05)',
           paddingTop: '1rem',
           fontSize: '0.75rem',
@@ -58,9 +78,6 @@ export const Footer: React.FC = () => {
         }}>
           <div>
             &copy; 2026 SVCE Tech Expert Organizing Committee. All rights reserved.
-          </div>
-          <div>
-            AI simulated output is probabilistic and subject to administrative review.
           </div>
         </div>
       </div>

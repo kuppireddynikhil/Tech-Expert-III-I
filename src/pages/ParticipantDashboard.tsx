@@ -81,10 +81,7 @@ export const ParticipantDashboard: React.FC = () => {
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <h2 style={{ fontSize: '1.75rem' }}>{profile?.full_name}</h2>
-              <span className="badge badge-emerald">
-                {profile?.registration_status?.toUpperCase()}
-              </span>
+              <h2 style={{ fontSize: '1.75rem' }}> Welcome to Tech Expert<br></br>{profile?.full_name}<br></br></h2>
             </div>
             <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
               {profile?.email} {profile?.college_id && `• ID: ${profile.college_id}`}
@@ -125,81 +122,105 @@ export const ParticipantDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Competition Status Alert */}
-      <div style={{
-        backgroundColor: 'rgba(15, 23, 42, 0.8)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: 'var(--radius-lg)',
-        padding: '1.25rem 1.75rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '1rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Clock size={20} color="var(--cyan-400)" />
-          <div>
-            <div style={{ fontWeight: 600, color: '#FFFFFF', fontSize: '0.95rem' }}>
-              Competition Event State: <span style={{ color: 'var(--cyan-400)', textTransform: 'uppercase' }}>{settings?.event_status}</span>
-            </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Current Active Stage: <strong>{settings?.current_phase}</strong> • College: Sri Venkateswara College of Engineering
-            </div>
-          </div>
-        </div>
-
-        {assignedSetP1 && (
-          <div className="badge badge-cyan" style={{ padding: '0.4rem 0.85rem' }}>
-            <Layers size={14} /> Assigned: {assignedSetP1.set_name}
-          </div>
-        )}
+      {/* Competition Phases Heading */}
+      <div style={{ marginTop: '0.75rem', marginBottom: '-0.25rem' }}>
+        <h2 style={{
+          fontSize: '1.65rem',
+          fontWeight: 800,
+          fontFamily: 'var(--font-display)',
+          letterSpacing: '-0.02em',
+          color: '#FFFFFF',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.65rem',
+          marginBottom: '0.35rem'
+        }}>
+          <Layers size={24} color="var(--cyan-400)" />
+          Competition Phases
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.925rem', margin: 0 }}>
+          Access your active competition challenges and track qualification status across each phase.
+        </p>
       </div>
 
-      {/* 3 Competition Phase Cards */}
-      <div className="grid-3">
+      {/* Competition Phase Cards (Each occupies a full row matching the banner width) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
         {/* Phase 1 Card */}
-        <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(0, 242, 254, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Zap size={22} color="var(--cyan-400)" />
+        <div className="glass-card" style={{
+          padding: '1.75rem 2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          gap: '1.25rem',
+          width: '100%'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1, minWidth: '280px' }}>
+              <div style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'rgba(0, 242, 254, 0.12)',
+                border: '1px solid rgba(0, 242, 254, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Zap size={24} color="var(--cyan-400)" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.25rem', color: '#FFFFFF', fontWeight: 700 }}>
+                  Phase 1: Quick Quiz
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>
+                  20 Python fundamental MCQs with strict 15s per-question timer. Top 15 qualify for Phase 2.
+                </p>
+              </div>
             </div>
-            <span className={`badge ${phases?.phase1?.status === 'active' ? 'badge-emerald' : phases?.phase1?.status === 'closed' ? 'badge-rose' : 'badge-cyan'}`}>
+
+            <span className={`badge ${phases?.phase1?.status === 'active' ? 'badge-emerald' : phases?.phase1?.status === 'closed' ? 'badge-rose' : 'badge-cyan'}`} style={{ alignSelf: 'flex-start' }}>
               {phases?.phase1?.status === 'closed' ? 'CLOSED & LOCKED' : phases?.phase1?.status?.toUpperCase()}
             </span>
           </div>
 
-          <div>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Phase 1: Quick Quiz</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              20 Python fundamental MCQs with strict 15s per-question timer. Top 15 qualify for Phase 2.
-            </p>
-          </div>
-
           <div style={{
-            fontSize: '0.8rem',
-            color: 'var(--text-muted)',
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            padding: '0.65rem 0.85rem',
-            borderRadius: 'var(--radius-sm)'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            paddingTop: '1rem',
+            borderTop: '1px solid var(--border-subtle)'
           }}>
-            Timer: 15s / question • Passing: Top 15
-          </div>
+            <div style={{
+              fontSize: '0.825rem',
+              color: 'var(--text-muted)',
+              backgroundColor: 'rgba(0, 0, 0, 0.25)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              padding: '0.6rem 0.95rem',
+              borderRadius: 'var(--radius-sm)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <Clock size={15} color="var(--cyan-400)" />
+              <span>Timer: 15s / question • Passing: Top 15</span>
+            </div>
 
-          <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
             <Link
               to="/phase1"
               className={`btn ${phases?.phase1?.status === 'active' ? 'btn-primary' : phases?.phase1?.status === 'closed' ? 'btn-secondary' : 'btn-secondary'}`}
-              style={{ width: '100%', borderColor: phases?.phase1?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined }}
+              style={{
+                minWidth: '220px',
+                borderColor: phases?.phase1?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined
+              }}
             >
               {phases?.phase1?.status === 'active' ? (
                 <>
@@ -219,46 +240,81 @@ export const ParticipantDashboard: React.FC = () => {
         </div>
 
         {/* Phase 2 Card */}
-        <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(168, 85, 247, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Code2 size={22} color="var(--purple-400)" />
+        <div className="glass-card" style={{
+          padding: '1.75rem 2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          gap: '1.25rem',
+          width: '100%'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1, minWidth: '280px' }}>
+              <div style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'rgba(168, 85, 247, 0.12)',
+                border: '1px solid rgba(168, 85, 247, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Code2 size={24} color="var(--purple-400)" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.25rem', color: '#FFFFFF', fontWeight: 700 }}>
+                  Phase 2: Debugging Challenge
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>
+                  3 Debugging programs inside Monaco Editor with 15 minutes overall phase limit. Top 5 qualify.
+                </p>
+              </div>
             </div>
-            <span className={`badge ${phases?.phase2?.status === 'active' ? 'badge-emerald' : phases?.phase2?.status === 'closed' ? 'badge-rose' : 'badge-purple'}`}>
+
+            <span className={`badge ${phases?.phase2?.status === 'active' ? 'badge-emerald' : phases?.phase2?.status === 'closed' ? 'badge-rose' : 'badge-purple'}`} style={{ alignSelf: 'flex-start' }}>
               {phases?.phase2?.status === 'closed' ? 'CLOSED & LOCKED' : phases?.phase2?.status?.toUpperCase()}
             </span>
           </div>
 
-          <div>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Phase 2: Debugging Challenge</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              3 Debugging programs inside Monaco Editor with 15 minutes overall phase limit. Top 5 qualify.
-            </p>
-          </div>
-
           <div style={{
-            fontSize: '0.8rem',
-            color: 'var(--text-muted)',
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            padding: '0.65rem 0.85rem',
-            borderRadius: 'var(--radius-sm)'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            paddingTop: '1rem',
+            borderTop: '1px solid var(--border-subtle)'
           }}>
-            Total Deadline: 15 Mins • Gemini AI Evaluated
-          </div>
+            <div style={{
+              fontSize: '0.825rem',
+              color: 'var(--text-muted)',
+              backgroundColor: 'rgba(0, 0, 0, 0.25)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              padding: '0.6rem 0.95rem',
+              borderRadius: 'var(--radius-sm)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <Clock size={15} color="var(--purple-400)" />
+              <span>Total Deadline: 15 Mins • Gemini AI Evaluated</span>
+            </div>
 
-          <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
             <Link
               to="/phase2"
               className={`btn ${phases?.phase2?.status === 'active' ? 'btn-accent' : 'btn-secondary'}`}
-              style={{ width: '100%', borderColor: phases?.phase2?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined }}
+              style={{
+                minWidth: '220px',
+                borderColor: phases?.phase2?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined
+              }}
             >
               {phases?.phase2?.status === 'active' ? (
                 <>
@@ -278,47 +334,81 @@ export const ParticipantDashboard: React.FC = () => {
         </div>
 
         {/* Phase 3 Card */}
-        <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(244, 63, 94, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Trophy size={22} color="var(--amber-400)" />
+        <div className="glass-card" style={{
+          padding: '1.75rem 2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          gap: '1.25rem',
+          width: '100%'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1, minWidth: '280px' }}>
+              <div style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'rgba(244, 63, 94, 0.12)',
+                border: '1px solid rgba(244, 63, 94, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Trophy size={24} color="var(--amber-400)" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.25rem', color: '#FFFFFF', fontWeight: 700 }}>
+                  Phase 3: Logic Builder (Finals)
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>
+                  3 complex algorithmic challenges. Choose order freely. Exactly 3 Run attempts per program before permanent lock!
+                </p>
+              </div>
             </div>
-            <span className={`badge ${phases?.phase3?.status === 'active' ? 'badge-emerald' : phases?.phase3?.status === 'closed' ? 'badge-rose' : 'badge-rose'}`}>
+
+            <span className={`badge ${phases?.phase3?.status === 'active' ? 'badge-emerald' : phases?.phase3?.status === 'closed' ? 'badge-rose' : 'badge-rose'}`} style={{ alignSelf: 'flex-start' }}>
               {phases?.phase3?.status === 'closed' ? 'CLOSED & LOCKED' : phases?.phase3?.status?.toUpperCase()}
             </span>
           </div>
 
-          <div>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Phase 3: Logic Builder (Finals)</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              3 complex algorithmic challenges. Choose order freely. Exactly 3 Run attempts per program before permanent lock!
-            </p>
-          </div>
-
           <div style={{
-            fontSize: '0.8rem',
-            color: 'var(--rose-400)',
-            backgroundColor: 'rgba(244, 63, 94, 0.08)',
-            border: '1px solid rgba(244, 63, 94, 0.2)',
-            padding: '0.65rem 0.85rem',
-            borderRadius: 'var(--radius-sm)'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            paddingTop: '1rem',
+            borderTop: '1px solid var(--border-subtle)'
           }}>
-            Strict 3 Attempts Max • Permanent Lock on 3 Fails
-          </div>
+            <div style={{
+              fontSize: '0.825rem',
+              color: 'var(--rose-400)',
+              backgroundColor: 'rgba(244, 63, 94, 0.08)',
+              border: '1px solid rgba(244, 63, 94, 0.2)',
+              padding: '0.6rem 0.95rem',
+              borderRadius: 'var(--radius-sm)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <AlertTriangle size={15} color="var(--rose-400)" />
+              <span>Strict 3 Attempts Max • Permanent Lock on 3 Fails</span>
+            </div>
 
-          <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
             <Link
               to="/phase3"
               className={`btn ${phases?.phase3?.status === 'active' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ width: '100%', borderColor: phases?.phase3?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined }}
+              style={{
+                minWidth: '220px',
+                borderColor: phases?.phase3?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined
+              }}
             >
               {phases?.phase3?.status === 'active' ? (
                 <>

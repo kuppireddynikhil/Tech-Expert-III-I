@@ -6,15 +6,15 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 import type { CompetitionSettings, PhaseControl } from '../types';
-import { 
-  Terminal, 
-  Cpu, 
-  Zap, 
-  Code2, 
-  Trophy, 
-  ShieldCheck, 
-  ArrowRight, 
-  Clock, 
+import {
+  Terminal,
+  Cpu,
+  Zap,
+  Code2,
+  Trophy,
+  ShieldCheck,
+  ArrowRight,
+  Clock,
   Award,
   Users,
   CheckCircle2,
@@ -68,11 +68,15 @@ export const Home: React.FC = () => {
           fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
           fontWeight: 900,
           letterSpacing: '-0.03em',
-          maxWidth: '900px',
-          lineHeight: 1.15
+          maxWidth: '1000px',
+          lineHeight: 1.15,
+          fontFamily: 'italic'
         }}>
-          Master Python Under Pressure.{' '}
-          <span className="text-gradient-cyan">Powered by Gemini AI.</span>
+          Association of Intellectual Minds
+          <br></br>
+          <span style={{ fontSize: '50px', color: 'white', fontFamily: 'italic' }}>TECHNO STORM</span>
+          <br></br>
+          <span className="text-gradient-cyan" style={{ fontFamily: 'cursive' }}>Tech Expert</span>
         </h1>
 
         {/* Subtitle */}
@@ -82,8 +86,7 @@ export const Home: React.FC = () => {
           maxWidth: '700px',
           lineHeight: 1.6
         }}>
-          The ultimate 3-phase Python battle at Sri Venkateswara College of Engineering. 
-          Real-time timers, Monaco Editor coding, simulated AI evaluation, and centralized administrator control.
+          Challenge Your Mind. Prove Your Code, Conquer the Storm!
         </p>
 
         {/* Actions */}
@@ -96,19 +99,14 @@ export const Home: React.FC = () => {
           ) : (
             <>
               <Link to="/register" className="btn btn-primary btn-lg">
-                Register as Participant
+                Register
                 <ArrowRight size={18} />
               </Link>
               <Link to="/login" className="btn btn-secondary btn-lg">
-                Participant Login
+                Login
               </Link>
             </>
           )}
-
-          <Link to="/leaderboard" className="btn btn-secondary btn-lg">
-            <Trophy size={18} color="var(--amber-400)" />
-            Live Leaderboard
-          </Link>
         </div>
 
         {/* Quick Highlights Bar */}
@@ -287,53 +285,6 @@ export const Home: React.FC = () => {
               <Link to="/phase3" className="btn btn-secondary btn-sm" style={{ width: '100%' }}>
                 Enter Logic Builder <ArrowRight size={14} />
               </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* College & Department Fest Presentation */}
-      <section style={{
-        padding: '3rem',
-        backgroundColor: 'rgba(15, 23, 42, 0.5)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: 'var(--radius-xl)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '2rem'
-      }}>
-        <div style={{ maxWidth: '600px' }}>
-          <span className="badge badge-cyan" style={{ marginBottom: '1rem' }}>
-            Sri Venkateswara College of Engineering (SVCE)
-          </span>
-          <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>
-            Empowering the Next Generation of Python Developers
-          </h2>
-          <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
-            Tech Expert 2K26 is the premier Python competition engineered for SVCE students across Sections A through E and Academic Years I, II, and III. Powered by Google Gemini AI code interpretation with full server-side governance and audited manual review.
-          </p>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          minWidth: '240px'
-        }}>
-          <div className="glass-card" style={{ padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <Users size={24} color="var(--cyan-400)" />
-            <div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>Sections A – E</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Years I, II, and III Eligible</div>
-            </div>
-          </div>
-          <div className="glass-card" style={{ padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <ShieldCheck size={24} color="var(--emerald-400)" />
-            <div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>Role Verified</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>RLS Secured Database</div>
             </div>
           </div>
         </div>

@@ -5,7 +5,6 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
-  Terminal, 
   Trophy, 
   ShieldAlert, 
   LogOut, 
@@ -43,16 +42,28 @@ export const Navbar: React.FC = () => {
         {/* Brand & Fest Identity */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--grad-primary)',
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: 'var(--shadow-cyan)'
+            boxShadow: 'var(--shadow-cyan)',
+            border: '2px solid rgba(0, 242, 254, 0.6)',
+            backgroundColor: '#070B14',
+            flexShrink: 0
           }}>
-            <Terminal size={24} color="#070B14" strokeWidth={2.5} />
+            <img
+              src="/logo.png"
+              alt="Tech Expert Logo"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '50%'
+              }}
+            />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
