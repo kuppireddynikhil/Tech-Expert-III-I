@@ -102,9 +102,11 @@ export const Home: React.FC = () => {
                 Register
                 <ArrowRight size={18} />
               </Link>
+              <br></br>
               <Link to="/login" className="btn btn-secondary btn-lg">
                 Login
               </Link>
+              <br></br>
             </>
           )}
         </div>
