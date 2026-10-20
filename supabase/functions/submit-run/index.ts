@@ -204,10 +204,10 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
-  } catch (err) {
+  } catch (err: any) {
     console.error("Submit-run error:", err);
     return new Response(
-      JSON.stringify({ error: err.message || "Failed to process run submission" }),
+      JSON.stringify({ error: err?.message || "Failed to process run submission" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -185,9 +185,15 @@ export const ParticipantDashboard: React.FC = () => {
               </div>
             </div>
 
-            <span className={`badge ${phases?.phase1?.status === 'active' ? 'badge-emerald' : phases?.phase1?.status === 'closed' ? 'badge-rose' : 'badge-cyan'}`} style={{ alignSelf: 'flex-start' }}>
-              {phases?.phase1?.status === 'closed' ? 'CLOSED & LOCKED' : phases?.phase1?.status?.toUpperCase()}
-            </span>
+            {phases?.phase1?.status === 'closed' ? (
+              <span className="badge badge-rose" style={{ alignSelf: 'flex-start' }}>CLOSED & LOCKED</span>
+            ) : phases?.phase1?.exam_started_at ? (
+              <span className="badge badge-emerald" style={{ alignSelf: 'flex-start' }}>EXAM LIVE</span>
+            ) : (phases?.phase1?.is_activated || phases?.phase1?.status === 'active') ? (
+              <span className="badge badge-amber" style={{ alignSelf: 'flex-start' }}>WAITING ROOM OPEN</span>
+            ) : (
+              <span className="badge badge-cyan" style={{ alignSelf: 'flex-start' }}>{phases?.phase1?.status?.toUpperCase() || 'LOCKED'}</span>
+            )}
           </div>
 
           <div style={{
@@ -214,28 +220,39 @@ export const ParticipantDashboard: React.FC = () => {
               <span>Timer: 15s / question • Passing: Top 15</span>
             </div>
 
-            <Link
-              to="/phase1"
-              className={`btn ${phases?.phase1?.status === 'active' ? 'btn-primary' : phases?.phase1?.status === 'closed' ? 'btn-secondary' : 'btn-secondary'}`}
-              style={{
-                minWidth: '220px',
-                borderColor: phases?.phase1?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined
-              }}
-            >
-              {phases?.phase1?.status === 'active' ? (
-                <>
-                  Start Quick Quiz <ArrowRight size={15} />
-                </>
-              ) : phases?.phase1?.status === 'closed' ? (
-                <>
-                  <Lock size={15} color="var(--rose-400)" /> Phase 1 Closed (Locked)
-                </>
-              ) : (
-                <>
-                  View Quick Quiz <ArrowRight size={15} />
-                </>
-              )}
-            </Link>
+            {phases?.phase1?.status === 'closed' ? (
+              <Link
+                to="/waiting-room/phase1"
+                className="btn btn-secondary"
+                style={{ minWidth: '220px', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+              >
+                <Lock size={15} color="var(--rose-400)" /> Phase 1 Closed (Locked)
+              </Link>
+            ) : phases?.phase1?.exam_started_at ? (
+              <Link
+                to="/phase1"
+                className="btn btn-primary"
+                style={{ minWidth: '220px' }}
+              >
+                Start Quick Quiz <ArrowRight size={15} />
+              </Link>
+            ) : (phases?.phase1?.is_activated || phases?.phase1?.status === 'active') ? (
+              <Link
+                to="/waiting-room/phase1"
+                className="btn btn-primary"
+                style={{ minWidth: '220px' }}
+              >
+                Enter Waiting Room <ArrowRight size={15} />
+              </Link>
+            ) : (
+              <Link
+                to="/waiting-room/phase1"
+                className="btn btn-secondary"
+                style={{ minWidth: '220px' }}
+              >
+                <Lock size={15} /> Phase 1 Locked
+              </Link>
+            )}
           </div>
         </div>
 
@@ -279,9 +296,15 @@ export const ParticipantDashboard: React.FC = () => {
               </div>
             </div>
 
-            <span className={`badge ${phases?.phase2?.status === 'active' ? 'badge-emerald' : phases?.phase2?.status === 'closed' ? 'badge-rose' : 'badge-purple'}`} style={{ alignSelf: 'flex-start' }}>
-              {phases?.phase2?.status === 'closed' ? 'CLOSED & LOCKED' : phases?.phase2?.status?.toUpperCase()}
-            </span>
+            {phases?.phase2?.status === 'closed' ? (
+              <span className="badge badge-rose" style={{ alignSelf: 'flex-start' }}>CLOSED & LOCKED</span>
+            ) : phases?.phase2?.exam_started_at ? (
+              <span className="badge badge-emerald" style={{ alignSelf: 'flex-start' }}>EXAM LIVE</span>
+            ) : (phases?.phase2?.is_activated || phases?.phase2?.status === 'active') ? (
+              <span className="badge badge-amber" style={{ alignSelf: 'flex-start' }}>WAITING ROOM OPEN</span>
+            ) : (
+              <span className="badge badge-purple" style={{ alignSelf: 'flex-start' }}>{phases?.phase2?.status?.toUpperCase() || 'LOCKED'}</span>
+            )}
           </div>
 
           <div style={{
@@ -308,28 +331,39 @@ export const ParticipantDashboard: React.FC = () => {
               <span>Total Deadline: 15 Mins • Gemini AI Evaluated</span>
             </div>
 
-            <Link
-              to="/phase2"
-              className={`btn ${phases?.phase2?.status === 'active' ? 'btn-accent' : 'btn-secondary'}`}
-              style={{
-                minWidth: '220px',
-                borderColor: phases?.phase2?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined
-              }}
-            >
-              {phases?.phase2?.status === 'active' ? (
-                <>
-                  Enter Debug Challenge <ArrowRight size={15} />
-                </>
-              ) : phases?.phase2?.status === 'closed' ? (
-                <>
-                  <Lock size={15} color="var(--rose-400)" /> Phase 2 Closed (Locked)
-                </>
-              ) : (
-                <>
-                  View Debug Challenge <ArrowRight size={15} />
-                </>
-              )}
-            </Link>
+            {phases?.phase2?.status === 'closed' ? (
+              <Link
+                to="/waiting-room/phase2"
+                className="btn btn-secondary"
+                style={{ minWidth: '220px', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+              >
+                <Lock size={15} color="var(--rose-400)" /> Phase 2 Closed (Locked)
+              </Link>
+            ) : phases?.phase2?.exam_started_at ? (
+              <Link
+                to="/phase2"
+                className="btn btn-accent"
+                style={{ minWidth: '220px' }}
+              >
+                Enter Debug Challenge <ArrowRight size={15} />
+              </Link>
+            ) : (phases?.phase2?.is_activated || phases?.phase2?.status === 'active') ? (
+              <Link
+                to="/waiting-room/phase2"
+                className="btn btn-accent"
+                style={{ minWidth: '220px' }}
+              >
+                Enter Waiting Room <ArrowRight size={15} />
+              </Link>
+            ) : (
+              <Link
+                to="/waiting-room/phase2"
+                className="btn btn-secondary"
+                style={{ minWidth: '220px' }}
+              >
+                <Lock size={15} /> Phase 2 Locked
+              </Link>
+            )}
           </div>
         </div>
 
@@ -373,9 +407,15 @@ export const ParticipantDashboard: React.FC = () => {
               </div>
             </div>
 
-            <span className={`badge ${phases?.phase3?.status === 'active' ? 'badge-emerald' : phases?.phase3?.status === 'closed' ? 'badge-rose' : 'badge-rose'}`} style={{ alignSelf: 'flex-start' }}>
-              {phases?.phase3?.status === 'closed' ? 'CLOSED & LOCKED' : phases?.phase3?.status?.toUpperCase()}
-            </span>
+            {phases?.phase3?.status === 'closed' ? (
+              <span className="badge badge-rose" style={{ alignSelf: 'flex-start' }}>CLOSED & LOCKED</span>
+            ) : phases?.phase3?.exam_started_at ? (
+              <span className="badge badge-emerald" style={{ alignSelf: 'flex-start' }}>EXAM LIVE</span>
+            ) : (phases?.phase3?.is_activated || phases?.phase3?.status === 'active') ? (
+              <span className="badge badge-amber" style={{ alignSelf: 'flex-start' }}>WAITING ROOM OPEN</span>
+            ) : (
+              <span className="badge badge-rose" style={{ alignSelf: 'flex-start' }}>{phases?.phase3?.status?.toUpperCase() || 'LOCKED'}</span>
+            )}
           </div>
 
           <div style={{
@@ -402,28 +442,39 @@ export const ParticipantDashboard: React.FC = () => {
               <span>Strict 3 Attempts Max • Permanent Lock on 3 Fails</span>
             </div>
 
-            <Link
-              to="/phase3"
-              className={`btn ${phases?.phase3?.status === 'active' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{
-                minWidth: '220px',
-                borderColor: phases?.phase3?.status === 'closed' ? 'rgba(244, 63, 94, 0.3)' : undefined
-              }}
-            >
-              {phases?.phase3?.status === 'active' ? (
-                <>
-                  Enter Logic Builder <ArrowRight size={15} />
-                </>
-              ) : phases?.phase3?.status === 'closed' ? (
-                <>
-                  <Lock size={15} color="var(--rose-400)" /> Phase 3 Closed (Locked)
-                </>
-              ) : (
-                <>
-                  View Logic Builder <ArrowRight size={15} />
-                </>
-              )}
-            </Link>
+            {phases?.phase3?.status === 'closed' ? (
+              <Link
+                to="/waiting-room/phase3"
+                className="btn btn-secondary"
+                style={{ minWidth: '220px', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+              >
+                <Lock size={15} color="var(--rose-400)" /> Phase 3 Closed (Locked)
+              </Link>
+            ) : phases?.phase3?.exam_started_at ? (
+              <Link
+                to="/phase3"
+                className="btn btn-primary"
+                style={{ minWidth: '220px' }}
+              >
+                Enter Logic Builder <ArrowRight size={15} />
+              </Link>
+            ) : (phases?.phase3?.is_activated || phases?.phase3?.status === 'active') ? (
+              <Link
+                to="/waiting-room/phase3"
+                className="btn btn-primary"
+                style={{ minWidth: '220px' }}
+              >
+                Enter Waiting Room <ArrowRight size={15} />
+              </Link>
+            ) : (
+              <Link
+                to="/waiting-room/phase3"
+                className="btn btn-secondary"
+                style={{ minWidth: '220px' }}
+              >
+                <Lock size={15} /> Phase 3 Locked
+              </Link>
+            )}
           </div>
         </div>
       </div>

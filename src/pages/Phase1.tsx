@@ -73,9 +73,15 @@ export const Phase1: React.FC = () => {
         return;
       }
 
-      if (p1.status !== 'active') {
-        setError(`Phase 1 is currently ${p1.status}. It must be set to 'active' by the administrator to begin.`);
+      if (p1.status !== 'active' && !p1.is_activated) {
+        setError(`Phase 1 is currently ${p1.status}. It must be activated by the administrator to begin.`);
         setLoading(false);
+        return;
+      }
+
+      // If phase is activated but exam has NOT officially started, redirect to Waiting Room
+      if (!p1.exam_started_at) {
+        navigate('/waiting-room/phase1', { replace: true });
         return;
       }
 
@@ -183,6 +189,7 @@ export const Phase1: React.FC = () => {
 
   const currentQuestion = questions[currentIndex];
   const effectiveTimer = currentQuestion?.custom_timer || currentQuestion?.effective_timer || questionSet?.default_timer || 15;
+  const isPaused = phaseControl?.status === 'paused';
 
   // Periodic Phase Status & Force Closure Check
   useEffect(() => {
@@ -192,6 +199,8 @@ export const Phase1: React.FC = () => {
       try {
         const controls = await api.getPhaseControls();
         const p1 = controls.phase1;
+        setPhaseControl(p1);
+
         if (p1 && p1.status === 'closed') {
           // Administrator ended Phase 1 for all participants
           if (currentQuestion && session && finalizingRef.current !== currentQuestion.id) {
@@ -202,7 +211,6 @@ export const Phase1: React.FC = () => {
           if (session) {
             api.lockSession(session.id, 'Phase 1 was formally closed by administrator.').catch(console.error);
           }
-          setPhaseControl(p1);
           setAccessBlocked(true);
           setBlockedReason('Phase 1 has been concluded and closed by the administrator. Your exam has been automatically submitted and your screen is locked.');
           sessionStorage.removeItem(`svce_active_exam_p1_${session?.id}`);
@@ -210,19 +218,19 @@ export const Phase1: React.FC = () => {
       } catch (e) {
         // network hiccup
       }
-    }, 2500);
+    }, 1500);
 
     return () => clearInterval(interval);
   }, [quizCompleted, accessBlocked, currentQuestion, session, effectiveTimer]);
 
   const handleSelectChoice = (choiceId: string) => {
-    if (submitting || lastResult) return;
+    if (submitting || lastResult || isPaused) return;
     setSelectedChoice(choiceId);
   };
 
-  // Triggered STRICTLY when the countdown timer expires
+  // Triggered STRICTLY when the question answering countdown expires (same time for all participants)
   const handleTimerExpire = useCallback(async () => {
-    if (!currentQuestion || !session) return;
+    if (!currentQuestion || !session || isPaused) return;
     if (finalizingRef.current === currentQuestion.id) return;
     finalizingRef.current = currentQuestion.id;
 
@@ -249,35 +257,64 @@ export const Phase1: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [currentQuestion, session, effectiveTimer]);
+  }, [currentQuestion, session, effectiveTimer, isPaused]);
 
-  // Automatic flow: once the answer is revealed (correct answer + wrong selection, if any),
-  // wait briefly and move on to the next question — or finish the exam after the last one.
+  // Synchronized Multi-Participant Progression Loop:
+  // Every participant sees the same question at the same time and has the exact same submission deadline!
   useEffect(() => {
-    if (!lastResult || !session || quizCompleted) return;
+    if (!phaseControl?.exam_started_at || quizCompleted || accessBlocked || isPaused || questions.length === 0) return;
 
-    const timeout = setTimeout(async () => {
-      const nextIndex = currentIndex + 1;
-      try {
-        if (nextIndex < questions.length) {
-          await api.updateSessionProgress(session.id, nextIndex);
-          setCurrentIndex(nextIndex);
-          setSelectedChoice(null);
-          setLastResult(null);
-          setQuestionStartTime(Date.now());
-        } else {
-          await api.completeSession(session.id, totalScore);
+    const syncInterval = setInterval(() => {
+      const quizStartMs = new Date(phaseControl.exam_started_at!).getTime() + 3000;
+      const elapsedMs = Math.max(0, Date.now() - quizStartMs);
+      const elapsedSecs = Math.floor(elapsedMs / 1000);
+      const cycleDuration = effectiveTimer + Math.floor(REVEAL_DURATION_MS / 1000); // 15 + 3 = 18s
+      const totalQuizSecs = questions.length * cycleDuration;
+
+      if (elapsedSecs >= totalQuizSecs) {
+        if (!quizCompleted) {
+          if (session) {
+            api.completeSession(session.id, totalScore).catch(console.error);
+          }
           setQuizCompleted(true);
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }
-      } catch (err) {
-        console.error('Failed to advance exam:', err);
+        return;
       }
-    }, REVEAL_DURATION_MS);
 
-    return () => clearTimeout(timeout);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastResult]);
+      const syncIndex = Math.floor(elapsedSecs / cycleDuration);
+      const secondInCycle = elapsedSecs % cycleDuration;
+
+      if (syncIndex !== currentIndex && syncIndex < questions.length) {
+        // Advance question synchronously across all participants
+        setCurrentIndex(syncIndex);
+        setSelectedChoice(null);
+        setLastResult(null);
+        finalizingRef.current = null;
+        setQuestionStartTime(Date.now() - (secondInCycle * 1000));
+        if (session) {
+          api.updateSessionProgress(session.id, syncIndex).catch(console.error);
+        }
+      } else if (secondInCycle >= effectiveTimer && !lastResult) {
+        // Deadline reached for current question -> Synchronized auto-submission
+        handleTimerExpire();
+      }
+    }, 500);
+
+    return () => clearInterval(syncInterval);
+  }, [
+    phaseControl?.exam_started_at,
+    quizCompleted,
+    accessBlocked,
+    isPaused,
+    questions.length,
+    effectiveTimer,
+    currentIndex,
+    lastResult,
+    session,
+    totalScore,
+    handleTimerExpire
+  ]);
 
   // Re-entry Request Handler for Participants
   const handleRequestReentry = async () => {
@@ -557,6 +594,7 @@ export const Phase1: React.FC = () => {
           label="Question Timer"
           size="md"
           isReset={accessBlocked || phaseControl?.status === 'closed'}
+          isPaused={isPaused}
         />
       </div>
 
@@ -580,23 +618,57 @@ export const Phase1: React.FC = () => {
       {/* Question Card */}
       {currentQuestion && (
         <div className="glass-card" style={{ padding: '2.5rem', position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <span className="badge badge-purple" style={{ fontSize: '0.7rem' }}>
-              {currentQuestion.difficulty?.toUpperCase()}
-            </span>
-            <span className="badge badge-emerald" style={{ fontSize: '0.7rem' }}>
-              +{currentQuestion.scoring_points} PTS
-            </span>
-            {currentQuestion.tags?.map((t, idx) => (
-              <span key={idx} className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>
-                #{t}
+          {isPaused ? (
+            <div style={{ textAlign: 'center', padding: '3.5rem 1.5rem' }}>
+              <div
+                style={{
+                  width: '68px',
+                  height: '68px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                  border: '2px solid var(--amber-400)',
+                  boxShadow: '0 0 30px rgba(245, 158, 11, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem auto'
+                }}
+              >
+                <Clock size={36} color="var(--amber-400)" />
+              </div>
+              <span className="badge badge-amber" style={{ marginBottom: '0.75rem', fontSize: '0.8rem' }}>
+                EXAMINATION PAUSED BY ADMINISTRATOR
               </span>
-            ))}
-          </div>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.5rem' }}>
+                Questions & Timer Paused
+              </h2>
+              <p style={{ color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 1.5rem auto', lineHeight: 1.6, fontSize: '0.95rem' }}>
+                The administrator has paused Phase 1. Question content and choices are hidden and the question timer has stopped. Your previous answers are recorded. Please remain on this screen.
+              </p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--amber-400)', fontSize: '0.9rem', fontWeight: 600 }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--amber-400)', animation: 'pulse 1s infinite' }} />
+                Waiting for administrator to resume exam...
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <span className="badge badge-purple" style={{ fontSize: '0.7rem' }}>
+                  {currentQuestion.difficulty?.toUpperCase()}
+                </span>
+                <span className="badge badge-emerald" style={{ fontSize: '0.7rem' }}>
+                  +{currentQuestion.scoring_points} PTS
+                </span>
+                {currentQuestion.tags?.map((t, idx) => (
+                  <span key={idx} className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>
+                    #{t}
+                  </span>
+                ))}
+              </div>
 
-          <h3 style={{ fontSize: '1.35rem', lineHeight: 1.5, marginBottom: '2rem' }}>
-            {currentQuestion.problem_statement}
-          </h3>
+              <h3 style={{ fontSize: '1.35rem', lineHeight: 1.5, marginBottom: '2rem' }}>
+                {currentQuestion.problem_statement}
+              </h3>
 
           {/* Choices: Disabled once answered; correct answer highlighted in green; wrong selection in red */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '2.5rem' }}>
@@ -727,6 +799,8 @@ export const Phase1: React.FC = () => {
               </div>
             )}
           </div>
+          </>
+          )}
         </div>
       )}
     </div>

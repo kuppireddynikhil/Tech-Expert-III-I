@@ -2,7 +2,7 @@
 // Sri Venkateswara College of Engineering (SVCE)
 
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 
 export const Phase2: React.FC = () => {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
 
   const [phaseControl, setPhaseControl] = useState<PhaseControl | null>(null);
@@ -60,6 +61,12 @@ export const Phase2: React.FC = () => {
           return;
         }
 
+        // Feature 1: Waiting Room Redirect
+        if (!p2.exam_started_at) {
+          navigate('/waiting-room/phase2');
+          return;
+        }
+
         if (p2.status !== 'active') {
           setError(`Phase 2 is currently ${p2.status}. The event administrator must activate Phase 2 to allow submissions.`);
           setLoading(false);
@@ -78,10 +85,12 @@ export const Phase2: React.FC = () => {
           return;
         }
 
-        // Authoritative server-side session tracking
+        // Authoritative server-side session tracking & synchronized phase timer
         const { session: currentSession } = await api.getOrCreateSession('phase2');
         setSession(currentSession);
-        const startedAtMs = currentSession.started_at ? new Date(currentSession.started_at).getTime() : Date.now();
+        const startedAtMs = p2.exam_started_at
+          ? new Date(p2.exam_started_at).getTime()
+          : (currentSession.started_at ? new Date(currentSession.started_at).getTime() : Date.now());
         setPhaseStartTime(startedAtMs);
 
         const deadlineMinutes = p2.total_deadline_minutes || 15;
@@ -124,7 +133,7 @@ export const Phase2: React.FC = () => {
     loadPhase2();
   }, []);
 
-  // Periodic Phase Status and Force Closure Check
+  // Periodic Phase Status and Force Closure / Pause Check
   useEffect(() => {
     if (loading || isClosed) return;
 
@@ -132,10 +141,13 @@ export const Phase2: React.FC = () => {
       try {
         const controls = await api.getPhaseControls();
         const p2 = controls.phase2;
+        setPhaseControl(p2);
+        if (p2 && p2.exam_started_at) {
+          setPhaseStartTime(new Date(p2.exam_started_at).getTime());
+        }
         if (p2 && p2.status === 'closed') {
           setIsClosed(true);
           setIsExpired(true);
-          setPhaseControl(p2);
           localStorage.removeItem('svce_phase2_start');
           if (session) {
             api.lockSession(session.id, 'Phase 2 was formally closed by administrator.').catch(console.error);
@@ -144,11 +156,12 @@ export const Phase2: React.FC = () => {
       } catch (err) {
         // network error
       }
-    }, 2500);
+    }, 1500);
 
     return () => clearInterval(interval);
   }, [loading, isClosed, session]);
 
+  const isPaused = phaseControl?.status === 'paused';
   const currentQ = questions[activeQuestionIndex];
   const isCurrentSolved = currentQ ? Boolean(solvedQuestions[currentQ.id]) : false;
   const allSolved = questions.length > 0 && questions.every(q => solvedQuestions[q.id]);
@@ -291,6 +304,7 @@ export const Phase2: React.FC = () => {
           size="md"
           onExpire={() => setIsExpired(true)}
           isReset={isClosed || phaseControl?.status === 'closed'}
+          isPaused={isPaused}
         />
       </div>
 
@@ -362,47 +376,82 @@ export const Phase2: React.FC = () => {
         </div>
       )}
 
-      {/* Question Selector Tabs */}
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-        {questions.map((q, idx) => {
-          const isActive = idx === activeQuestionIndex;
-          const isSolved = Boolean(solvedQuestions[q.id]);
+      {/* Examination Paused Screen (Hides questions and editor) */}
+      {isPaused ? (
+        <div className="glass-card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
+          <div
+            style={{
+              width: '68px',
+              height: '68px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              border: '2px solid var(--amber-400)',
+              boxShadow: '0 0 30px rgba(245, 158, 11, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.5rem auto'
+            }}
+          >
+            <Clock size={36} color="var(--amber-400)" />
+          </div>
+          <span className="badge badge-amber" style={{ marginBottom: '0.75rem', fontSize: '0.8rem' }}>
+            EXAMINATION PAUSED BY ADMINISTRATOR
+          </span>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.5rem' }}>
+            Phase 2 Debugging & Timer Paused
+          </h2>
+          <p style={{ color: 'var(--text-muted)', maxWidth: '520px', margin: '0 auto 1.5rem auto', lineHeight: 1.6, fontSize: '0.95rem' }}>
+            The administrator has temporarily paused Phase 2. The challenge questions and editor are hidden and the phase timer has stopped. Your written code has been safely preserved. Please remain on this screen.
+          </p>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--amber-400)', fontSize: '0.9rem', fontWeight: 600 }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--amber-400)', animation: 'pulse 1s infinite' }} />
+            Waiting for administrator to resume Phase 2...
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Question Selector Tabs */}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {questions.map((q, idx) => {
+              const isActive = idx === activeQuestionIndex;
+              const isSolved = Boolean(solvedQuestions[q.id]);
 
-          return (
-            <button
-              key={q.id}
-              onClick={() => setActiveQuestionIndex(idx)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.65rem 1.25rem',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: isActive ? 'rgba(168, 85, 247, 0.15)' : 'rgba(15, 23, 42, 0.6)',
-                border: isActive ? '1px solid var(--purple-400)' : '1px solid var(--border-subtle)',
-                color: isActive ? '#FFFFFF' : 'var(--text-muted)',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 600,
-                fontSize: '0.875rem'
-              }}
-            >
-              <FileCode size={16} color={isSolved ? 'var(--emerald-400)' : isActive ? 'var(--purple-400)' : 'var(--text-dim)'} />
-              <span>Program {idx + 1}: {q.title}</span>
-              {isSolved && <CheckCircle2 size={16} color="var(--emerald-400)" />}
-            </button>
-          );
-        })}
-      </div>
+              return (
+                <button
+                  key={q.id}
+                  onClick={() => setActiveQuestionIndex(idx)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.65rem 1.25rem',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: isActive ? 'rgba(168, 85, 247, 0.15)' : 'rgba(15, 23, 42, 0.6)',
+                    border: isActive ? '1px solid var(--purple-400)' : '1px solid var(--border-subtle)',
+                    color: isActive ? '#FFFFFF' : 'var(--text-muted)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 600,
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  <FileCode size={16} color={isSolved ? 'var(--emerald-400)' : isActive ? 'var(--purple-400)' : 'var(--text-dim)'} />
+                  <span>Program {idx + 1}: {q.title}</span>
+                  {isSolved && <CheckCircle2 size={16} color="var(--emerald-400)" />}
+                </button>
+              );
+            })}
+          </div>
 
-      {/* Main Split Layout: Description on Left, Editor on Right */}
-      {currentQ && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(350px, 420px) 1fr',
-          gap: '1.25rem',
-          alignItems: 'stretch'
-        }}>
+          {/* Main Split Layout: Description on Left, Editor on Right */}
+          {currentQ && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(350px, 420px) 1fr',
+              gap: '1.25rem',
+              alignItems: 'stretch'
+            }}>
           {/* Left Column: Problem Description & Expected Behavior */}
           <div className="glass-card" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', overflowY: 'auto', maxHeight: '720px' }}>
             <div>
@@ -581,6 +630,8 @@ export const Phase2: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

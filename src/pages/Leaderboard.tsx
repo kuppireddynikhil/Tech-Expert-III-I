@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import type { LeaderboardEntry, CompetitionSettings, SectionType, AcademicYearType } from '../types';
+import type { LeaderboardEntry, CompetitionSettings, SectionType, AcademicYearType, PhaseLeaderboardEntry, PhaseId } from '../types';
 import confetti from 'canvas-confetti';
 import {
   Trophy,
@@ -15,7 +15,11 @@ import {
   EyeOff,
   Sparkles,
   Users,
-  CheckCircle2
+  CheckCircle2,
+  Zap,
+  Code2,
+  Layers,
+  Clock
 } from 'lucide-react';
 
 export const Leaderboard: React.FC = () => {
@@ -23,6 +27,9 @@ export const Leaderboard: React.FC = () => {
 
   const [settings, setSettings] = useState<CompetitionSettings | null>(null);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [activeTab, setActiveTab] = useState<'overall' | 'phase1' | 'phase2' | 'phase3'>('overall');
+  const [phaseEntries, setPhaseEntries] = useState<PhaseLeaderboardEntry[]>([]);
+  const [loadingPhase, setLoadingPhase] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedSection, setSelectedSection] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
@@ -55,8 +62,36 @@ export const Leaderboard: React.FC = () => {
     loadLeaderboard();
   }, []);
 
+  // Load phase-specific leaderboard when tab changes
+  useEffect(() => {
+    if (activeTab === 'overall') return;
+
+    async function loadPhaseData() {
+      setLoadingPhase(true);
+      try {
+        const data = await api.getPhaseLeaderboard(activeTab as PhaseId);
+        setPhaseEntries(data);
+      } catch (err) {
+        console.error(`Failed to load ${activeTab} leaderboard:`, err);
+      } finally {
+        setLoadingPhase(false);
+      }
+    }
+    loadPhaseData();
+  }, [activeTab]);
+
   // Filter entries
   const filteredEntries = entries.filter((e) => {
+    const matchesSearch = 
+      e.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      e.email.toLowerCase().includes(search.toLowerCase());
+    const matchesSection = selectedSection === 'ALL' || e.section === selectedSection;
+    const matchesYear = selectedYear === 'ALL' || e.academic_year === selectedYear;
+
+    return matchesSearch && matchesSection && matchesYear;
+  });
+
+  const filteredPhaseEntries = phaseEntries.filter((e) => {
     const matchesSearch = 
       e.full_name.toLowerCase().includes(search.toLowerCase()) ||
       e.email.toLowerCase().includes(search.toLowerCase());
@@ -120,8 +155,46 @@ export const Leaderboard: React.FC = () => {
         </p>
       </div>
 
-      {/* Podium Display (Winner & Runner-up) */}
-      {entries.length > 0 && (
+      {/* Leaderboard View Tabs */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '0.75rem',
+        flexWrap: 'wrap',
+        margin: '0 auto'
+      }}>
+        <button
+          onClick={() => setActiveTab('overall')}
+          className={`btn ${activeTab === 'overall' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+          style={{ padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-md)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Trophy size={16} /> Overall Fest Standings
+        </button>
+        <button
+          onClick={() => setActiveTab('phase1')}
+          className={`btn ${activeTab === 'phase1' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+          style={{ padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-md)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Zap size={16} /> Phase 1: Quick Quiz
+        </button>
+        <button
+          onClick={() => setActiveTab('phase2')}
+          className={`btn ${activeTab === 'phase2' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+          style={{ padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-md)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Code2 size={16} /> Phase 2: Debugging
+        </button>
+        <button
+          onClick={() => setActiveTab('phase3')}
+          className={`btn ${activeTab === 'phase3' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+          style={{ padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-md)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Crown size={16} /> Phase 3: Logic Finals
+        </button>
+      </div>
+
+      {/* Podium Display (Winner & Runner-up) - Only on Overall Tab */}
+      {activeTab === 'overall' && entries.length > 0 && (
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
@@ -281,83 +354,172 @@ export const Leaderboard: React.FC = () => {
       </div>
 
       {/* Rankings Table */}
-      <div className="custom-table-container">
-        <table className="custom-table">
-          <thead>
-            <tr>
-              <th style={{ width: '80px' }}>Rank</th>
-              <th>Participant</th>
-              <th>Section</th>
-              <th>Year</th>
-              <th>Phase 1 (Quiz)</th>
-              <th>Phase 2 (Debug)</th>
-              <th>Phase 3 (Logic)</th>
-              <th>Total Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEntries.length === 0 ? (
+      {activeTab === 'overall' ? (
+        <div className="custom-table-container">
+          <table className="custom-table">
+            <thead>
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
-                  No participants matching the selected filters.
-                </td>
+                <th style={{ width: '80px' }}>Rank</th>
+                <th>Participant</th>
+                <th>Section</th>
+                <th>Year</th>
+                <th>Phase 1 (Quiz)</th>
+                <th>Phase 2 (Debug)</th>
+                <th>Phase 3 (Logic)</th>
+                <th>Total Score</th>
               </tr>
-            ) : (
-              filteredEntries.map((entry) => {
-                const isTop1 = entry.rank === 1;
-                const isTop2 = entry.rank === 2;
-                const isTop3 = entry.rank === 3;
+            </thead>
+            <tbody>
+              {filteredEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
+                    No participants matching the selected filters.
+                  </td>
+                </tr>
+              ) : (
+                filteredEntries.map((entry) => {
+                  const isTop1 = entry.rank === 1;
+                  const isTop2 = entry.rank === 2;
+                  const isTop3 = entry.rank === 3;
 
-                return (
-                  <tr key={entry.user_id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        {isTop1 ? (
-                          <Crown size={18} color="var(--amber-400)" />
-                        ) : isTop2 ? (
-                          <Medal size={18} color="#CBD5E1" />
-                        ) : isTop3 ? (
-                          <Medal size={18} color="#D97706" />
-                        ) : (
-                          <span style={{ fontWeight: 700, color: 'var(--text-muted)', marginLeft: '4px' }}>
-                            #{entry.rank}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{entry.full_name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{entry.email}</div>
-                    </td>
-                    <td>
-                      <span className="badge badge-cyan">Sec {entry.section}</span>
-                    </td>
-                    <td>
-                      <span className="badge badge-purple">Yr {entry.academic_year}</span>
-                    </td>
-                    <td>
-                      <strong style={{ color: 'var(--cyan-400)' }}>{entry.phase1_score} pts</strong>
-                    </td>
-                    <td>
-                      <strong style={{ color: 'var(--purple-400)' }}>{entry.phase2_score} pts</strong>
-                    </td>
-                    <td>
-                      <span className={`badge ${entry.phase3_solved > 0 ? 'badge-emerald' : 'badge-rose'}`}>
-                        {entry.phase3_solved} / 3 Solved
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF' }}>
-                        {entry.total_score}
-                      </span>
+                  return (
+                    <tr key={entry.user_id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          {isTop1 ? (
+                            <Crown size={18} color="var(--amber-400)" />
+                          ) : isTop2 ? (
+                            <Medal size={18} color="#CBD5E1" />
+                          ) : isTop3 ? (
+                            <Medal size={18} color="#D97706" />
+                          ) : (
+                            <span style={{ fontWeight: 700, color: 'var(--text-muted)', marginLeft: '4px' }}>
+                              #{entry.rank}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{entry.full_name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{entry.email}</div>
+                      </td>
+                      <td>
+                        <span className="badge badge-cyan">Sec {entry.section}</span>
+                      </td>
+                      <td>
+                        <span className="badge badge-purple">Yr {entry.academic_year}</span>
+                      </td>
+                      <td>
+                        <strong style={{ color: 'var(--cyan-400)' }}>{entry.phase1_score} pts</strong>
+                      </td>
+                      <td>
+                        <strong style={{ color: 'var(--purple-400)' }}>{entry.phase2_score} pts</strong>
+                      </td>
+                      <td>
+                        <span className={`badge ${entry.phase3_solved > 0 ? 'badge-emerald' : 'badge-rose'}`}>
+                          {entry.phase3_solved} / 3 Solved
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF' }}>
+                          {entry.total_score}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        /* Phase-Specific Run Leaderboard */
+        <div className="custom-table-container">
+          {loadingPhase ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+              <div className="spinner" style={{ width: '32px', height: '32px', margin: '0 auto 0.75rem auto' }} />
+              Loading {activeTab.toUpperCase()} run standings...
+            </div>
+          ) : (
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '80px' }}>Rank</th>
+                  <th>Participant</th>
+                  <th>Section</th>
+                  <th>Year</th>
+                  <th>Run</th>
+                  <th>Score / Result</th>
+                  <th>Performance Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPhaseEntries.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
+                      No participant attempts recorded for {activeTab.toUpperCase()} yet.
                     </td>
                   </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                ) : (
+                  filteredPhaseEntries.map((entry) => {
+                    const isTop1 = entry.rank === 1;
+                    const isTop2 = entry.rank === 2;
+                    const isTop3 = entry.rank === 3;
+
+                    return (
+                      <tr key={entry.user_id}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            {isTop1 ? (
+                              <Crown size={18} color="var(--amber-400)" />
+                            ) : isTop2 ? (
+                              <Medal size={18} color="#CBD5E1" />
+                            ) : isTop3 ? (
+                              <Medal size={18} color="#D97706" />
+                            ) : (
+                              <span style={{ fontWeight: 700, color: 'var(--text-muted)', marginLeft: '4px' }}>
+                                #{entry.rank}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{entry.full_name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{entry.email}</div>
+                        </td>
+                        <td>
+                          <span className="badge badge-cyan">Sec {entry.section}</span>
+                        </td>
+                        <td>
+                          <span className="badge badge-purple">Yr {entry.academic_year}</span>
+                        </td>
+                        <td>
+                          <span className="badge badge-secondary" style={{ fontSize: '0.75rem' }}>
+                            Run #{entry.run_number}
+                          </span>
+                        </td>
+                        <td>
+                          <strong style={{ color: 'var(--cyan-400)', fontSize: '1.05rem' }}>
+                            {entry.score} pts
+                          </strong>
+                        </td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                          {entry.detail || '—'}
+                          {entry.time_spent_seconds && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                              Time: {entry.time_spent_seconds}s
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
   );
 };

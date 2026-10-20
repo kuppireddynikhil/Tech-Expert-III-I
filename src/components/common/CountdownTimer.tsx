@@ -11,6 +11,7 @@ interface CountdownTimerProps {
   label?: string;
   size?: 'sm' | 'md' | 'lg';
   isReset?: boolean;       // Forcibly resets and stops timer (e.g. when phase is closed)
+  isPaused?: boolean;      // Forcibly pauses timer (e.g. when administrator pauses phase)
 }
 
 export const CountdownTimer: React.FC<CountdownTimerProps> = ({
@@ -19,7 +20,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   onExpire,
   label = 'Time Remaining',
   size = 'md',
-  isReset = false
+  isReset = false,
+  isPaused = false
 }) => {
   // If no startTimeMs passed, default to when this component mounted (stored in ref so state re-renders don't reset)
   const initialMountTime = useRef(Date.now());
@@ -42,6 +44,11 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
       return;
     }
 
+    if (isPaused) {
+      // While paused, do not update or expire
+      return;
+    }
+
     // Reset expiration flag if duration or start changes
     expiredRef.current = false;
 
@@ -59,7 +66,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
     }, 250);
 
     return () => clearInterval(interval);
-  }, [durationSeconds, startTimeMs, onExpire, isReset]);
+  }, [durationSeconds, startTimeMs, onExpire, isReset, isPaused]);
 
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
@@ -76,6 +83,10 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
     colorClass = 'var(--text-dim)';
     bgClass = 'rgba(15, 23, 42, 0.6)';
     borderClass = 'var(--border-subtle)';
+  } else if (isPaused) {
+    colorClass = 'var(--amber-400)';
+    bgClass = 'rgba(245, 158, 11, 0.15)';
+    borderClass = 'var(--amber-400)';
   } else if (percentLeft <= 20 || remainingSeconds <= 10) {
     colorClass = 'var(--rose-400)';
     bgClass = 'rgba(244, 63, 94, 0.15)';
@@ -121,7 +132,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
             {label}
           </span>
         )}
-        <span>{formattedTime}</span>
+        <span>{isPaused ? `${formattedTime} (PAUSED)` : formattedTime}</span>
       </div>
     </div>
   );

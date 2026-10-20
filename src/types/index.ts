@@ -58,6 +58,13 @@ export interface PhaseControl {
   scoring_rules?: Record<string, any>;
   randomize_questions: boolean;
   updated_at: string;
+  // Waiting Room, Exam Start, and Run State
+  is_activated?: boolean;
+  exam_started_at?: string | null;
+  current_run_number?: number;
+  active_question_set_id?: string | null;
+  paused_at?: string | null;
+  total_paused_seconds?: number;
 }
 
 export interface QuestionChoice {
@@ -261,3 +268,32 @@ export interface AdvancementCandidate {
 }
 
 export type AdvancementTarget = 'phase2' | 'phase3';
+
+export interface PhaseLeaderboardEntry {
+  user_id: string;
+  full_name: string;
+  email: string;
+  section: SectionType;
+  academic_year: AcademicYearType;
+  phase: PhaseId;
+  run_number: number;
+  score: number;
+  rank: number;
+  detail: string;
+  time_spent_seconds?: number;
+  solved_count?: number;
+  completed_at?: string;
+  is_winner?: boolean;
+  is_runner_up?: boolean;
+}
+
+export interface ArchivedPhaseRun {
+  id: string;
+  phase: PhaseId;
+  run_number: number;
+  question_set_id?: string;
+  archived_at: string;
+  archived_by?: string;
+  reason?: string;
+  leaderboard_data?: PhaseLeaderboardEntry[];
+}

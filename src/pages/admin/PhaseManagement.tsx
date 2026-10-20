@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { CountdownTimer } from '../../components/common/CountdownTimer';
-import type { PhaseControl, PhaseId, PhaseStatus, CompetitionSettings } from '../../types';
+import type { PhaseControl, PhaseId, PhaseStatus, CompetitionSettings, QuestionSet } from '../../types';
 import {
   Sliders,
   Play,
@@ -19,7 +19,10 @@ import {
   Zap,
   Code2,
   Trophy,
-  Lock
+  Lock,
+  X,
+  FileQuestion,
+  HelpCircle
 } from 'lucide-react';
 
 export const PhaseManagement: React.FC = () => {
@@ -27,6 +30,36 @@ export const PhaseManagement: React.FC = () => {
   const [settings, setSettings] = useState<CompetitionSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingPhase, setSavingPhase] = useState<string | null>(null);
+
+  // Modals state
+  const [startExamModal, setStartExamModal] = useState<{
+    isOpen: boolean;
+    phase: PhaseId | null;
+    assignedSetName: string;
+    reason: string;
+  }>({
+    isOpen: false,
+    phase: null,
+    assignedSetName: '',
+    reason: 'Exam officially started by administrator'
+  });
+
+  const [restartModal, setRestartModal] = useState<{
+    isOpen: boolean;
+    phase: PhaseId | null;
+    questionSets: QuestionSet[];
+    selectedSetId: string;
+    reason: string;
+    loadingSets: boolean;
+  }>({
+    isOpen: false,
+    phase: null,
+    questionSets: [],
+    selectedSetId: '',
+    reason: 'Restarting phase with selected question set',
+    loadingSets: false
+  });
+
   const [localConfig, setLocalConfig] = useState<Record<PhaseId, {
     default_question_timer: number;
     total_deadline_minutes: number;
@@ -73,8 +106,128 @@ export const PhaseManagement: React.FC = () => {
     loadData();
   }, []);
 
+  // 1. ACTIVATE PHASE: Makes phase available and opens waiting room without starting exam
+  const handleActivatePhase = async (phase: PhaseId) => {
+    const reason = prompt(
+      `Enter administrative reason for activating ${phase.toUpperCase()}:\n\n` +
+      `Note: This opens the Waiting Room for eligible participants. It does NOT start the exam.`,
+      'Phase activated for participant waiting room entry'
+    );
+    if (!reason) return;
+
+    setSavingPhase(phase);
+    try {
+      await api.activatePhase(phase, reason);
+      alert(`✅ ${phase.toUpperCase()} is now ACTIVATED.\n\n• Waiting Room is now OPEN for eligible participants.\n• Examination questions remain locked.\n• Click "Start Exam" when you are ready to begin the examination.`);
+      await loadData();
+    } catch (err: any) {
+      alert(`Failed to activate phase: ${err.message}`);
+    } finally {
+      setSavingPhase(null);
+    }
+  };
+
+  // 2. START EXAM: Confirmation workflow and official start
+  const handleOpenStartExam = async (phase: PhaseId) => {
+    const p = phases?.[phase];
+    if (!p?.is_activated && p?.status !== 'active') {
+      alert(`⚠️ Cannot start exam: ${phase.toUpperCase()} must be activated first. Click "Activate Phase" to open the waiting room.`);
+      return;
+    }
+    if (p?.exam_started_at) {
+      alert(`ℹ️ Exam for ${phase.toUpperCase()} has already started at ${new Date(p.exam_started_at).toLocaleTimeString()}.`);
+      return;
+    }
+
+    let setName = 'Default Question Set';
+    try {
+      const assigned = await api.getParticipantAssignedSet(phase);
+      if (assigned?.set_name) setName = assigned.set_name;
+    } catch (e) {
+      console.log('No specific assigned set found');
+    }
+
+    setStartExamModal({
+      isOpen: true,
+      phase,
+      assignedSetName: setName,
+      reason: `Official start of ${phase.toUpperCase()} examination`
+    });
+  };
+
+  const handleConfirmStartExam = async () => {
+    if (!startExamModal.phase) return;
+    const pId = startExamModal.phase;
+    setSavingPhase(pId);
+    try {
+      await api.startExam(pId, startExamModal.reason);
+      setStartExamModal({ isOpen: false, phase: null, assignedSetName: '', reason: '' });
+      alert(`🚀 Examination for ${pId.toUpperCase()} is now LIVE!\n\n• Participants waiting in the Waiting Room can now enter.\n• Timers have started.`);
+      await loadData();
+    } catch (err: any) {
+      alert(`Failed to start exam: ${err.message}`);
+    } finally {
+      setSavingPhase(null);
+    }
+  };
+
+  // 3. START AGAIN: Destructive reset of active attempt state and new run creation
+  const handleOpenRestart = async (phase: PhaseId) => {
+    setRestartModal({
+      isOpen: true,
+      phase,
+      questionSets: [],
+      selectedSetId: '',
+      reason: `Restarting ${phase.toUpperCase()} for all participants`,
+      loadingSets: true
+    });
+
+    try {
+      const sets = await api.getQuestionSets(phase);
+      const eligibleSets = sets.filter(s => !s.is_archived);
+      setRestartModal(prev => ({
+        ...prev,
+        questionSets: eligibleSets,
+        selectedSetId: eligibleSets[0]?.id || '',
+        loadingSets: false
+      }));
+    } catch (err: any) {
+      alert(`Failed to load question sets for ${phase}: ${err.message}`);
+      setRestartModal(prev => ({ ...prev, loadingSets: false }));
+    }
+  };
+
+  const handleConfirmRestart = async () => {
+    if (!restartModal.phase || !restartModal.selectedSetId) return;
+    const pId = restartModal.phase;
+    setSavingPhase(pId);
+    try {
+      const result = await api.restartPhase(pId, restartModal.selectedSetId, restartModal.reason);
+      setRestartModal({
+        isOpen: false,
+        phase: null,
+        questionSets: [],
+        selectedSetId: '',
+        reason: '',
+        loadingSets: false
+      });
+      alert(
+        `🔄 ${pId.toUpperCase()} HAS BEEN RESTARTED (RUN #${result.newRunNumber})\n\n` +
+        `• Previous run data has been safely ARCHIVED (historical records preserved).\n` +
+        `• Participant active attempts, progress, and timer states have been reset for ${pId.toUpperCase()} only.\n` +
+        `• Eligible participants are now in the Waiting Room.\n` +
+        `• The new exam is NOT yet started. Press "Start Exam" when ready.`
+      );
+      await loadData();
+    } catch (err: any) {
+      alert(`Failed to restart phase: ${err.message}`);
+    } finally {
+      setSavingPhase(null);
+    }
+  };
+
   const handleUpdateStatus = async (phase: PhaseId, newStatus: PhaseStatus) => {
-    const reason = prompt(`Enter mandatory administrative reason for transitioning ${phase.toUpperCase()} to ${newStatus.toUpperCase()}:`, 'Event schedule transition');
+    const reason = prompt(`Enter administrative reason for transitioning ${phase.toUpperCase()} to ${newStatus.toUpperCase()}:`, 'Event schedule transition');
     if (!reason) return;
 
     setSavingPhase(phase);
@@ -160,7 +313,7 @@ export const PhaseManagement: React.FC = () => {
         </div>
         <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Phase Lifecycle Management</h1>
         <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-          Start, pause, resume, and close competition phases. Configure timers, deadlines, and qualification quotas.
+          Activate phases for the waiting room, start examinations, restart phases safely with dedicated question sets, and manage timers.
         </div>
       </div>
 
@@ -183,6 +336,9 @@ export const PhaseManagement: React.FC = () => {
           }
 
           const IconComponent = icon;
+          const isActivated = Boolean(p.is_activated || p.status === 'active');
+          const isExamLive = Boolean(p.exam_started_at);
+          const isClosed = p.status === 'closed';
 
           return (
             <div key={pId} className="glass-card" style={{ padding: '2rem' }}>
@@ -201,64 +357,115 @@ export const PhaseManagement: React.FC = () => {
                     <IconComponent size={24} color={color} />
                   </div>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                       <span className={`badge ${badgeClass}`}>{pId.toUpperCase()}</span>
+                      <span className="badge badge-secondary" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                        RUN #{p.current_run_number || 1}
+                      </span>
                       <h2 style={{ fontSize: '1.4rem' }}>{p.title}</h2>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        Current State:{' '}
-                        <strong style={{
-                          color: p.status === 'active' ? 'var(--emerald-400)' : p.status === 'paused' ? 'var(--amber-400)' : p.status === 'closed' ? 'var(--rose-400)' : 'var(--text-muted)',
-                          textTransform: 'uppercase'
-                        }}>
-                          {p.status}
-                        </strong>
+                        Phase State:{' '}
+                        {isClosed ? (
+                          <strong style={{ color: 'var(--rose-400)' }}>CLOSED & LOCKED</strong>
+                        ) : isExamLive ? (
+                          <strong style={{ color: 'var(--emerald-400)' }}>EXAM LIVE ({new Date(p.exam_started_at!).toLocaleTimeString()})</strong>
+                        ) : isActivated ? (
+                          <strong style={{ color: 'var(--amber-400)' }}>WAITING ROOM OPEN (EXAM NOT STARTED)</strong>
+                        ) : (
+                          <strong style={{ color: 'var(--text-muted)' }}>INACTIVE / DRAFT</strong>
+                        )}
                       </div>
 
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Phase Timer:</span>
                         <CountdownTimer
-                          key={`admin-timer-${pId}-${p.status}`}
+                          key={`admin-timer-${pId}-${p.status}-${p.exam_started_at}`}
                           durationSeconds={(p.total_deadline_minutes || (pId === 'phase1' ? 15 : 20)) * 60}
                           startTimeMs={p.start_time ? new Date(p.start_time).getTime() : undefined}
                           label="Phase Clock"
                           size="sm"
-                          isReset={p.status === 'closed'}
+                          isReset={p.status === 'closed' || !p.exam_started_at}
+                          isPaused={p.status === 'paused'}
                         />
-                        {p.status === 'closed' && (
-                          <span className="badge badge-rose" style={{ fontSize: '0.65rem' }}>
-                            RESET (00:00)
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* State Transition Action Buttons */}
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {p.status !== 'active' && (
-                    <button
-                      onClick={() => handleUpdateStatus(pId, 'active')}
-                      disabled={savingPhase === pId}
-                      className="btn btn-success btn-sm"
-                    >
-                      <Play size={14} fill="currentColor" /> Activate / Release
-                    </button>
-                  )}
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {/* Distinct Control 1: Activate Phase */}
+                  <button
+                    onClick={() => handleActivatePhase(pId)}
+                    disabled={savingPhase === pId || isClosed}
+                    className="btn btn-primary btn-sm"
+                    style={{
+                      backgroundColor: isActivated && !isExamLive ? 'rgba(0, 242, 254, 0.15)' : undefined,
+                      borderColor: isActivated && !isExamLive ? 'var(--cyan-400)' : undefined
+                    }}
+                    title="Activate Phase: Opens Waiting Room for eligible participants. Does NOT start the exam."
+                  >
+                    <Play size={14} fill="currentColor" /> {isActivated ? 'Activate Phase' : 'Activate Phase'}
+                  </button>
 
+                  {/* Distinct Control 2: Start Exam */}
+                  <button
+                    onClick={() => handleOpenStartExam(pId)}
+                    disabled={savingPhase === pId || isExamLive || !isActivated || isClosed}
+                    className="btn btn-success btn-sm"
+                    style={{
+                      opacity: isExamLive ? 0.6 : 1,
+                      backgroundColor: isExamLive ? 'rgba(16, 185, 129, 0.2)' : undefined
+                    }}
+                    title={isExamLive ? `Exam started at ${new Date(p.exam_started_at!).toLocaleTimeString()}` : 'Start Exam: Authorizes waiting participants to enter the examination'}
+                  >
+                    <Zap size={14} /> {isExamLive ? 'Exam Live' : 'Start Exam'}
+                  </button>
+
+                  {/* Distinct Control 3: Start Again */}
+                  <button
+                    onClick={() => handleOpenRestart(pId)}
+                    disabled={savingPhase === pId}
+                    className="btn btn-warning btn-sm"
+                    style={{
+                      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                      borderColor: 'var(--amber-400)',
+                      color: 'var(--amber-400)'
+                    }}
+                    title="Start Again: Archive previous run, reset attempt counters for this phase, and create new run with a selected question set"
+                  >
+                    <RotateCcw size={14} /> Start Again
+                  </button>
+
+                  {/* Secondary Governance Actions */}
                   {p.status === 'active' && (
                     <button
                       onClick={() => handleUpdateStatus(pId, 'paused')}
                       disabled={savingPhase === pId}
                       className="btn btn-secondary btn-sm"
                     >
-                      <Pause size={14} fill="currentColor" /> Pause Phase
+                      <Pause size={14} fill="currentColor" /> Pause
                     </button>
                   )}
 
-                  {p.status !== 'closed' ? (
+                  {p.status === 'paused' && (
+                    <button
+                      onClick={() => handleUpdateStatus(pId, 'active')}
+                      disabled={savingPhase === pId}
+                      className="btn btn-success btn-sm"
+                      style={{
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderColor: 'var(--emerald-400)',
+                        color: 'var(--emerald-400)'
+                      }}
+                    >
+                      <Play size={14} fill="currentColor" /> Resume
+                    </button>
+                  )}
+
+                  {!isClosed ? (
                     <button
                       onClick={() => handleEndPhase(pId)}
                       disabled={savingPhase === pId}
@@ -285,7 +492,7 @@ export const PhaseManagement: React.FC = () => {
                         fontWeight: 700
                       }}
                     >
-                      <Lock size={12} /> PHASE ENDED & LOCKED
+                      <Lock size={12} /> PHASE LOCKED
                     </span>
                   )}
 
@@ -295,7 +502,7 @@ export const PhaseManagement: React.FC = () => {
                     className="btn btn-secondary btn-sm"
                     title="Reset back to Draft"
                   >
-                    <RotateCcw size={14} /> Reset to Draft
+                    Reset to Draft
                   </button>
                 </div>
               </div>
@@ -393,6 +600,230 @@ export const PhaseManagement: React.FC = () => {
           );
         })}
       </div>
+
+      {/* START EXAM CONFIRMATION MODAL */}
+      {startExamModal.isOpen && startExamModal.phase && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1.5rem'
+        }}>
+          <div className="glass-card-glow" style={{ maxWidth: '540px', width: '100%', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Zap size={24} color="var(--emerald-400)" />
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0 }}>
+                  Start Exam — {phases?.[startExamModal.phase]?.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setStartExamModal({ isOpen: false, phase: null, assignedSetName: '', reason: '' })}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: 'var(--radius-md)',
+              padding: '1rem',
+              marginBottom: '1.25rem',
+              fontSize: '0.875rem'
+            }}>
+              <p style={{ margin: 0, color: '#E2E8F0', lineHeight: 1.5 }}>
+                You are about to officially <strong>Start the Examination</strong> for <strong>{phases?.[startExamModal.phase]?.title}</strong> (Run #{phases?.[startExamModal.phase]?.current_run_number || 1}).
+              </p>
+              <ul style={{ margin: '0.75rem 0 0 1.25rem', padding: 0, color: 'var(--text-muted)' }}>
+                <li>Eligible participants in the Waiting Room will immediately be authorized to enter the exam.</li>
+                <li>Question timers and phase deadlines will begin based on the authoritative server timestamp.</li>
+                <li>The Waiting Room status will update live for all connected participants.</li>
+              </ul>
+            </div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label className="form-label">Assigned Question Set</label>
+              <div style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid var(--border-subtle)',
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.9rem',
+                color: 'var(--cyan-400)',
+                fontWeight: 600
+              }}>
+                {startExamModal.assignedSetName}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="form-label">Administrative Reason (Audit Log)</label>
+              <input
+                type="text"
+                className="form-input"
+                value={startExamModal.reason}
+                onChange={(e) => setStartExamModal(prev => ({ ...prev, reason: e.target.value }))}
+                placeholder="e.g. Schedule commencement at 10:00 AM"
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button
+                onClick={() => setStartExamModal({ isOpen: false, phase: null, assignedSetName: '', reason: '' })}
+                className="btn btn-secondary"
+                disabled={savingPhase === startExamModal.phase}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmStartExam}
+                className="btn btn-success"
+                disabled={savingPhase === startExamModal.phase}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}
+              >
+                <Zap size={16} /> Confirm & Start Exam
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* START AGAIN CONFIRMATION MODAL */}
+      {restartModal.isOpen && restartModal.phase && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.88)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1.5rem'
+        }}>
+          <div className="glass-card-glow" style={{ maxWidth: '580px', width: '100%', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <RotateCcw size={24} color="var(--amber-400)" />
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0 }}>
+                  Start Again — {phases?.[restartModal.phase]?.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setRestartModal({ isOpen: false, phase: null, questionSets: [], selectedSetId: '', reason: '', loadingSets: false })}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Warning Box */}
+            <div style={{
+              backgroundColor: 'rgba(244, 63, 94, 0.12)',
+              border: '1px solid rgba(244, 63, 94, 0.35)',
+              borderRadius: 'var(--radius-md)',
+              padding: '1.25rem',
+              marginBottom: '1.25rem',
+              fontSize: '0.875rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rose-400)', fontWeight: 700, marginBottom: '0.5rem' }}>
+                <AlertTriangle size={18} />
+                DESTRUCTIVE ADMINISTRATIVE ACTION WARNING
+              </div>
+              <p style={{ margin: 0, color: '#E2E8F0', lineHeight: 1.5 }}>
+                Starting again will <strong>reset the active state</strong> for <strong>{phases?.[restartModal.phase]?.title}</strong>:
+              </p>
+              <ul style={{ margin: '0.5rem 0 0 1.25rem', padding: 0, color: 'var(--text-muted)' }}>
+                <li>A new run (Run #{(phases?.[restartModal.phase]?.current_run_number || 1) + 1}) will be initiated.</li>
+                <li>Previous run data will be <strong>archived and preserved</strong> for administrative audit.</li>
+                <li>Participant active attempts, timer states, and answers for this phase will be cleared.</li>
+                <li>Participants will be returned to the <strong>Waiting Room</strong> in an un-started state.</li>
+                <li><strong>No other phases, registrations, or credentials will be affected.</strong></li>
+              </ul>
+            </div>
+
+            {/* Question Set Selection */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Select Question Set for the New Run</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Must belong to {restartModal.phase.toUpperCase()}</span>
+              </label>
+
+              {restartModal.loadingSets ? (
+                <div style={{ padding: '0.75rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading question sets...</div>
+              ) : restartModal.questionSets.length === 0 ? (
+                <div style={{
+                  padding: '1rem',
+                  backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--amber-400)',
+                  fontSize: '0.85rem'
+                }}>
+                  ⚠️ No available question sets found for this phase. Please create and publish a question set first in Question Set Management.
+                </div>
+              ) : (
+                <select
+                  className="form-select"
+                  value={restartModal.selectedSetId}
+                  onChange={(e) => setRestartModal(prev => ({ ...prev, selectedSetId: e.target.value }))}
+                >
+                  {restartModal.questionSets.map(set => (
+                    <option key={set.id} value={set.id}>
+                      {set.set_name} {set.is_published ? '(Published)' : '(Draft)'} — {set.items?.length || 0} Questions
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Admin Reason Input */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="form-label">Mandatory Administrative Reason</label>
+              <input
+                type="text"
+                className="form-input"
+                value={restartModal.reason}
+                onChange={(e) => setRestartModal(prev => ({ ...prev, reason: e.target.value }))}
+                placeholder="e.g. Technical difficulty encountered; restarting with Set B"
+              />
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button
+                onClick={() => setRestartModal({ isOpen: false, phase: null, questionSets: [], selectedSetId: '', reason: '', loadingSets: false })}
+                className="btn btn-secondary"
+                disabled={savingPhase === restartModal.phase}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmRestart}
+                className="btn btn-warning"
+                disabled={savingPhase === restartModal.phase || !restartModal.selectedSetId || restartModal.questionSets.length === 0}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontWeight: 700,
+                  backgroundColor: '#D97706',
+                  color: '#FFFFFF'
+                }}
+              >
+                <RotateCcw size={16} /> Confirm & Start Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

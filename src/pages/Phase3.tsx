@@ -2,7 +2,7 @@
 // Sri Venkateswara College of Engineering (SVCE)
 
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,6 +14,7 @@ import {
   Play,
   CheckCircle2,
   Lock,
+  Clock,
   AlertTriangle,
   FileCode,
   Terminal,
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react';
 
 export const Phase3: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [phaseControl, setPhaseControl] = useState<PhaseControl | null>(null);
@@ -56,6 +58,12 @@ export const Phase3: React.FC = () => {
           return;
         }
 
+        // Feature 1: Waiting Room Redirect
+        if (!p3.exam_started_at) {
+          navigate('/waiting-room/phase3');
+          return;
+        }
+
         if (p3.status !== 'active') {
           setError(`Phase 3 is currently ${p3.status}. The event administrator must activate Phase 3 to begin the finals.`);
           setLoading(false);
@@ -74,10 +82,12 @@ export const Phase3: React.FC = () => {
           return;
         }
 
-        // Authoritative server-side session tracking
+        // Authoritative server-side session tracking & synchronized finals timer
         const { session: currentSession } = await api.getOrCreateSession('phase3');
         setSession(currentSession);
-        const startedAtMs = currentSession.started_at ? new Date(currentSession.started_at).getTime() : Date.now();
+        const startedAtMs = p3.exam_started_at
+          ? new Date(p3.exam_started_at).getTime()
+          : (currentSession.started_at ? new Date(currentSession.started_at).getTime() : Date.now());
         setPhaseStartTime(startedAtMs);
 
         const set = await api.getParticipantAssignedSet('phase3');
@@ -117,7 +127,7 @@ export const Phase3: React.FC = () => {
     loadPhase3();
   }, []);
 
-  // Periodic Phase Status & Force Closure Check
+  // Periodic Phase Status & Force Closure / Pause Check
   useEffect(() => {
     if (loading || isClosed) return;
 
@@ -125,9 +135,12 @@ export const Phase3: React.FC = () => {
       try {
         const controls = await api.getPhaseControls();
         const p3 = controls.phase3;
+        setPhaseControl(p3);
+        if (p3 && p3.exam_started_at) {
+          setPhaseStartTime(new Date(p3.exam_started_at).getTime());
+        }
         if (p3 && p3.status === 'closed') {
           setIsClosed(true);
-          setPhaseControl(p3);
           if (session) {
             api.lockSession(session.id, 'Phase 3 was formally closed by administrator.').catch(console.error);
           }
@@ -135,11 +148,12 @@ export const Phase3: React.FC = () => {
       } catch (err) {
         // network error
       }
-    }, 2500);
+    }, 1500);
 
     return () => clearInterval(interval);
   }, [loading, isClosed, session]);
 
+  const isPaused = phaseControl?.status === 'paused';
   const currentQ = questions[activeQuestionIndex];
   const currentAttempt = currentQ ? (attemptsMap[currentQ.id] || { attempts_used: 0, is_solved: false, is_locked: false }) : null;
   const currentEval = currentQ ? evalResults[currentQ.id] : null;
@@ -304,7 +318,9 @@ export const Phase3: React.FC = () => {
             startTimeMs={phaseStartTime}
             label="Finals Deadline"
             size="md"
+            onExpire={() => {}}
             isReset={isClosed || phaseControl?.status === 'closed'}
+            isPaused={isPaused}
           />
 
           <div style={{
@@ -364,8 +380,43 @@ export const Phase3: React.FC = () => {
         </div>
       )}
 
-      {/* Program Selector Tabs with Attempts Status */}
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+      {/* Examination Paused Screen (Hides questions and editor) */}
+      {isPaused ? (
+        <div className="glass-card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
+          <div
+            style={{
+              width: '68px',
+              height: '68px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              border: '2px solid var(--amber-400)',
+              boxShadow: '0 0 30px rgba(245, 158, 11, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.5rem auto'
+            }}
+          >
+            <Clock size={36} color="var(--amber-400)" />
+          </div>
+          <span className="badge badge-amber" style={{ marginBottom: '0.75rem', fontSize: '0.8rem' }}>
+            EXAMINATION PAUSED BY ADMINISTRATOR
+          </span>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.5rem' }}>
+            Phase 3 Finals & Timer Paused
+          </h2>
+          <p style={{ color: 'var(--text-muted)', maxWidth: '520px', margin: '0 auto 1.5rem auto', lineHeight: 1.6, fontSize: '0.95rem' }}>
+            The administrator has temporarily paused Phase 3 Grand Finals. The algorithmic questions and editor are hidden and the finals timer has stopped. Your code has been safely preserved. Please remain on this screen.
+          </p>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--amber-400)', fontSize: '0.9rem', fontWeight: 600 }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--amber-400)', animation: 'pulse 1s infinite' }} />
+            Waiting for administrator to resume Phase 3...
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Program Selector Tabs with Attempts Status */}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         {questions.map((q, idx) => {
           const isActive = idx === activeQuestionIndex;
           const attempt = attemptsMap[q.id] || { attempts_used: 0, is_solved: false, is_locked: false };
@@ -616,6 +667,8 @@ export const Phase3: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

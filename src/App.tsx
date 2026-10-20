@@ -18,6 +18,7 @@ import { Leaderboard } from './pages/Leaderboard';
 
 // Participant Pages
 import { ParticipantDashboard } from './pages/ParticipantDashboard';
+import { WaitingRoom } from './pages/WaitingRoom';
 import { Phase1 } from './pages/Phase1';
 import { Phase2 } from './pages/Phase2';
 import { Phase3 } from './pages/Phase3';
@@ -56,6 +57,7 @@ export function App() {
           {/* Participant Protected Routes */}
           <Route element={<ParticipantLayout />}>
             <Route path="/dashboard" element={<ParticipantDashboard />} />
+            <Route path="/waiting-room/:phase" element={<WaitingRoom />} />
             <Route path="/phase1" element={<Phase1 />} />
             <Route path="/phase2" element={<Phase2 />} />
             <Route path="/phase3" element={<Phase3 />} />

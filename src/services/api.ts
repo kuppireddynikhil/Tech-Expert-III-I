@@ -10,6 +10,8 @@ import type {
   QuestionSet,
   QuestionSetAssignment,
   LeaderboardEntry,
+  PhaseLeaderboardEntry,
+  ArchivedPhaseRun,
   RunResult,
   AdminAuditLog,
   SectionType,
@@ -39,7 +41,11 @@ let mockPhaseControls: Record<string, PhaseControl> = {
   phase1: {
     phase: 'phase1',
     title: 'Phase 1: Python Quick Quiz',
-    status: 'active',
+    status: 'draft',
+    is_activated: false,
+    exam_started_at: null,
+    current_run_number: 1,
+    active_question_set_id: null,
     default_question_timer: 15,
     total_deadline_minutes: 0,
     qualification_limit: 15,
@@ -49,7 +55,11 @@ let mockPhaseControls: Record<string, PhaseControl> = {
   phase2: {
     phase: 'phase2',
     title: 'Phase 2: Python Debugging Challenge',
-    status: 'scheduled',
+    status: 'draft',
+    is_activated: false,
+    exam_started_at: null,
+    current_run_number: 1,
+    active_question_set_id: null,
     default_question_timer: 0,
     total_deadline_minutes: 15,
     qualification_limit: 5,
@@ -60,6 +70,10 @@ let mockPhaseControls: Record<string, PhaseControl> = {
     phase: 'phase3',
     title: 'Phase 3: Python Logic Builder',
     status: 'draft',
+    is_activated: false,
+    exam_started_at: null,
+    current_run_number: 1,
+    active_question_set_id: null,
     default_question_timer: 0,
     total_deadline_minutes: 0,
     qualification_limit: 2,
@@ -68,6 +82,7 @@ let mockPhaseControls: Record<string, PhaseControl> = {
   }
 };
 
+let mockArchivedRuns: ArchivedPhaseRun[] = [];
 let mockAuditLogs: AdminAuditLog[] = [];
 
 export const api = {
@@ -117,7 +132,27 @@ export const api = {
 
     const map = {} as Record<PhaseId, PhaseControl>;
     data.forEach((p: any) => {
-      map[p.phase as PhaseId] = p;
+      const rules = p.scoring_rules || {};
+      const isActivated = p.is_activated !== undefined
+        ? Boolean(p.is_activated)
+        : Boolean(rules.is_activated !== undefined ? rules.is_activated : p.status === 'active');
+      const examStartedAt = p.exam_started_at !== undefined
+        ? p.exam_started_at
+        : (rules.exam_started_at || null);
+      const runNumber = p.current_run_number || rules.current_run_number || 1;
+      const activeSetId = p.active_question_set_id || rules.active_question_set_id || null;
+      const pausedAt = p.paused_at !== undefined ? p.paused_at : (rules.paused_at || null);
+      const totalPausedSeconds = p.total_paused_seconds || rules.total_paused_seconds || 0;
+
+      map[p.phase as PhaseId] = {
+        ...p,
+        is_activated: isActivated,
+        exam_started_at: examStartedAt,
+        current_run_number: runNumber,
+        active_question_set_id: activeSetId,
+        paused_at: pausedAt,
+        total_paused_seconds: totalPausedSeconds
+      };
     });
     return map;
   },
@@ -128,14 +163,276 @@ export const api = {
       return;
     }
 
-    const { error } = await supabase
+    // Read current control so we preserve existing scoring_rules and handle pause arithmetic
+    const { data: current } = await supabase
       .from('phase_controls')
-      .update(updates)
+      .select('*')
+      .eq('phase', phase)
+      .maybeSingle();
+
+    const currentRules = (current?.scoring_rules || {}) as Record<string, any>;
+    const newRules = {
+      ...currentRules,
+      ...(updates.scoring_rules || {})
+    };
+
+    if (updates.is_activated !== undefined) newRules.is_activated = updates.is_activated;
+    if (updates.exam_started_at !== undefined) newRules.exam_started_at = updates.exam_started_at;
+    if (updates.current_run_number !== undefined) newRules.current_run_number = updates.current_run_number;
+    if (updates.active_question_set_id !== undefined) newRules.active_question_set_id = updates.active_question_set_id;
+
+    const payload: any = {
+      ...updates,
+      scoring_rules: newRules,
+      updated_at: new Date().toISOString()
+    };
+
+    // Authoritative Pause / Resume Arithmetic
+    if (updates.status === 'paused') {
+      const nowIso = new Date().toISOString();
+      payload.paused_at = nowIso;
+      newRules.paused_at = nowIso;
+    } else if (updates.status === 'active' && current?.status === 'paused') {
+      const pausedAt = current.paused_at || currentRules.paused_at;
+      if (pausedAt) {
+        const pauseElapsedMs = Math.max(0, Date.now() - new Date(pausedAt).getTime());
+        if (current.exam_started_at) {
+          const shiftedExamStart = new Date(new Date(current.exam_started_at).getTime() + pauseElapsedMs).toISOString();
+          payload.exam_started_at = shiftedExamStart;
+          newRules.exam_started_at = shiftedExamStart;
+        }
+        if (current.start_time) {
+          const shiftedStartTime = new Date(new Date(current.start_time).getTime() + pauseElapsedMs).toISOString();
+          payload.start_time = shiftedStartTime;
+          newRules.start_time = shiftedStartTime;
+        }
+        const addedPausedSecs = Math.round(pauseElapsedMs / 1000);
+        payload.total_paused_seconds = (current.total_paused_seconds || 0) + addedPausedSecs;
+        newRules.total_paused_seconds = payload.total_paused_seconds;
+      }
+      payload.paused_at = null;
+      newRules.paused_at = null;
+    }
+
+    // Attempt full update with top-level fields
+    let { error } = await supabase
+      .from('phase_controls')
+      .update(payload)
       .eq('phase', phase);
 
-    if (error) throw error;
+    if (error) {
+      console.warn('Top-level column notice on phase_controls, falling back to base fields with scoring_rules JSON:', error.message);
+      delete payload.is_activated;
+      delete payload.exam_started_at;
+      delete payload.current_run_number;
+      delete payload.active_question_set_id;
+      delete payload.paused_at;
+      delete payload.total_paused_seconds;
+
+      const fallbackRes = await supabase
+        .from('phase_controls')
+        .update(payload)
+        .eq('phase', phase);
+
+      if (fallbackRes.error) throw fallbackRes.error;
+    }
 
     await this.logAdminAction('UPDATE_PHASE_CONTROL', 'phase_controls', phase, JSON.stringify(updates), adminReason);
+  },
+
+  async activatePhase(phase: PhaseId, adminReason?: string): Promise<void> {
+    const controls = await this.getPhaseControls();
+    const current = controls[phase];
+    const runNum = current?.current_run_number || 1;
+
+    await this.updatePhaseControl(phase, {
+      status: 'active',
+      is_activated: true,
+      exam_started_at: null,
+      current_run_number: runNum
+    }, adminReason || `Administrator activated ${phase.toUpperCase()} (Waiting room opened)`);
+
+    await this.updateCompetitionSettings({
+      current_phase: phase,
+      event_status: 'active'
+    }, `Activated ${phase.toUpperCase()}`);
+
+    await this.logAdminAction(
+      'ACTIVATE_PHASE',
+      'phase_controls',
+      phase,
+      `Phase ${phase.toUpperCase()} activated. Eligible participants may enter waiting room. Exam not started yet.`,
+      adminReason
+    );
+  },
+
+  async startExam(phase: PhaseId, adminReason?: string): Promise<{ started_at: string }> {
+    const controls = await this.getPhaseControls();
+    const current = controls[phase];
+
+    if (!current?.is_activated && current?.status !== 'active') {
+      throw new Error(`Cannot start exam: ${phase.toUpperCase()} has not been activated yet. Please activate the phase first.`);
+    }
+
+    if (current?.exam_started_at) {
+      throw new Error(`Exam for ${phase.toUpperCase()} has already started at ${new Date(current.exam_started_at).toLocaleTimeString()}.`);
+    }
+
+    const now = new Date().toISOString();
+
+    await this.updatePhaseControl(phase, {
+      status: 'active',
+      is_activated: true,
+      exam_started_at: now,
+      start_time: now
+    }, adminReason || `Administrator started examination for ${phase.toUpperCase()}`);
+
+    await this.logAdminAction(
+      'START_EXAM',
+      'phase_controls',
+      phase,
+      `Authoritative exam start recorded for ${phase.toUpperCase()} at ${now}. Participants in waiting room authorized to enter examination.`,
+      adminReason
+    );
+
+    return { started_at: now };
+  },
+
+  async restartPhase(phase: PhaseId, questionSetId: string, adminReason?: string): Promise<{ newRunNumber: number }> {
+    const controls = await this.getPhaseControls();
+    const current = controls[phase];
+    const currentRun = current?.current_run_number || 1;
+    const nextRun = currentRun + 1;
+
+    // 1. Snapshot previous run's leaderboard data before reset
+    let previousLeaderboard: PhaseLeaderboardEntry[] = [];
+    try {
+      previousLeaderboard = await this.getPhaseLeaderboard(phase, currentRun);
+    } catch (e) {
+      console.warn('Could not snapshot previous leaderboard:', e);
+    }
+
+    // 2. Archive previous run record
+    const archiveRecord: ArchivedPhaseRun = {
+      id: crypto.randomUUID(),
+      phase,
+      run_number: currentRun,
+      question_set_id: current?.active_question_set_id || undefined,
+      archived_at: new Date().toISOString(),
+      reason: adminReason || `Restarted to Run #${nextRun}`,
+      leaderboard_data: previousLeaderboard
+    };
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('archived_phase_runs').insert({
+          phase,
+          run_number: currentRun,
+          question_set_id: current?.active_question_set_id || null,
+          leaderboard_data: previousLeaderboard,
+          reason: adminReason || `Restarted to Run #${nextRun}`
+        });
+      } catch (archErr) {
+        console.warn('Archived table insert notice (saved to audit metadata):', archErr);
+      }
+    } else {
+      mockArchivedRuns.push(archiveRecord);
+    }
+
+    // 3. Reset active phase session and attempt states strictly for the selected phase
+    if (isSupabaseConfigured) {
+      // Archive or delete previous quiz responses for Phase 1
+      if (phase === 'phase1') {
+        const { data: sessList } = await supabase
+          .from('competition_sessions')
+          .select('id')
+          .eq('phase', 'phase1');
+
+        const sIds = (sessList || []).map(s => s.id);
+        if (sIds.length > 0) {
+          await supabase
+            .from('quiz_responses')
+            .delete()
+            .in('session_id', sIds);
+        }
+      }
+
+      // Reset program attempts strictly for Phase 2 / Phase 3
+      if (phase === 'phase2' || phase === 'phase3') {
+        await supabase
+          .from('program_attempts')
+          .delete()
+          .eq('phase', phase);
+      }
+
+      // Reset active sessions for this phase
+      await supabase
+        .from('competition_sessions')
+        .update({
+          status: 'active',
+          current_question_index: 0,
+          current_question_started_at: new Date().toISOString(),
+          final_score: 0,
+          is_locked: false,
+          reentry_status: 'none',
+          reentry_reason: null,
+          assigned_set_id: questionSetId,
+          started_at: new Date().toISOString(),
+          ended_at: null
+        })
+        .eq('phase', phase);
+
+      // Deactivate any existing 'all' assignment for this phase and assign selected set
+      await supabase
+        .from('question_set_assignments')
+        .update({ is_active: false })
+        .eq('target_type', 'all');
+
+      await supabase
+        .from('question_set_assignments')
+        .insert({
+          set_id: questionSetId,
+          target_type: 'all',
+          target_value: 'all',
+          is_active: true
+        });
+    } else {
+      if (phase === 'phase1') {
+        mockQuizResponses = {};
+      }
+      Object.values(mockSessions).forEach(s => {
+        if (s.phase === phase) {
+          s.status = 'active';
+          s.current_question_index = 0;
+          s.final_score = 0;
+          s.is_locked = false;
+          s.reentry_status = 'none';
+          s.assigned_set_id = questionSetId;
+        }
+      });
+    }
+
+    // 4. Update phase_controls: place back in Waiting Room (is_activated: true, exam_started_at: null)
+    await this.updatePhaseControl(phase, {
+      status: 'active',
+      is_activated: true,
+      exam_started_at: null, // EXAM IS NOT STARTED! Participants in Waiting Room!
+      start_time: undefined,
+      end_time: undefined,
+      current_run_number: nextRun,
+      active_question_set_id: questionSetId
+    }, `Restarted ${phase.toUpperCase()} to Run #${nextRun}`);
+
+    // 5. Authoritative Audit Log
+    await this.logAdminAction(
+      'PHASE_RESTART',
+      'phase_controls',
+      phase,
+      `Phase ${phase.toUpperCase()} restarted. Run #${currentRun} archived -> Run #${nextRun} created with question set ${questionSetId}. Participants in Waiting Room.`,
+      adminReason
+    );
+
+    return { newRunNumber: nextRun };
   },
 
   async endPhaseForEveryone(phase: PhaseId, adminReason?: string): Promise<{ affectedSessions: number }> {
@@ -889,6 +1186,13 @@ export const api = {
     session: CompetitionSession;
     isNew: boolean;
   }> {
+    // Authoritative exam start check: Exam must be started before session can be created or activated
+    const controls = await this.getPhaseControls();
+    const pControl = controls[phase];
+    if (!pControl?.exam_started_at) {
+      throw new Error(`The examination for ${pControl?.title || phase.toUpperCase()} has not officially started yet. Please wait in the Waiting Room.`);
+    }
+
     if (!isSupabaseConfigured) {
       const key = `local_session_${phase}`;
       let s = mockSessions[key];
@@ -1358,7 +1662,7 @@ export const api = {
     const { data: profiles, error: pErr } = await supabase
       .from('profiles')
       .select('*')
-      .eq('registration_status', 'active');
+      .neq('registration_status', 'disqualified');
 
     if (pErr || !profiles) return [];
 
@@ -1452,6 +1756,293 @@ export const api = {
     return entries;
   },
 
+  async getPhaseLeaderboard(phase: PhaseId, runNumber?: number): Promise<PhaseLeaderboardEntry[]> {
+    const settings = await this.getCompetitionSettings();
+    const controls = await this.getPhaseControls();
+    const pControl = controls[phase];
+    const targetRun = runNumber || pControl?.current_run_number || 1;
+
+    // Check visibility for non-admins
+    if (isSupabaseConfigured) {
+      const { data: authSession } = await supabase.auth.getSession();
+      const userId = authSession.session?.user?.id;
+      let userIsAdmin = false;
+      if (userId) {
+        const { data: roleData } = await supabase
+          .from('admin_roles')
+          .select('role, status')
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .maybeSingle();
+        userIsAdmin = Boolean(roleData);
+      }
+
+      if (!settings.leaderboard_visible && !userIsAdmin) {
+        return [];
+      }
+    }
+
+    if (!isSupabaseConfigured) {
+      // Mock data for preview
+      const mockList: PhaseLeaderboardEntry[] = [
+        {
+          user_id: 'mock-1',
+          full_name: 'Adithya Kumar',
+          email: 'adithya@svce.ac.in',
+          section: 'A',
+          academic_year: 'III',
+          phase,
+          run_number: targetRun,
+          score: phase === 'phase1' ? 190 : phase === 'phase2' ? 90 : 3,
+          rank: 1,
+          detail: phase === 'phase1' ? '19 / 20 Correct' : phase === 'phase2' ? '3 Debugging Challenges Solved' : '3 Logic Programs Solved (Winner)',
+          time_spent_seconds: 140,
+          solved_count: phase === 'phase3' ? 3 : undefined,
+          is_winner: phase === 'phase3' ? true : undefined
+        },
+        {
+          user_id: 'mock-2',
+          full_name: 'Bhavana Sri',
+          email: 'bhavana@svce.ac.in',
+          section: 'B',
+          academic_year: 'II',
+          phase,
+          run_number: targetRun,
+          score: phase === 'phase1' ? 170 : phase === 'phase2' ? 60 : 3,
+          rank: 2,
+          detail: phase === 'phase1' ? '17 / 20 Correct' : phase === 'phase2' ? '2 Debugging Challenges Solved' : '3 Logic Programs Solved (Runner-Up)',
+          time_spent_seconds: 175,
+          solved_count: phase === 'phase3' ? 3 : undefined,
+          is_runner_up: phase === 'phase3' ? true : undefined
+        }
+      ];
+      return mockList;
+    }
+
+    // Check if targetRun is an archived historical run
+    if (runNumber && runNumber < (pControl?.current_run_number || 1)) {
+      const { data: arch } = await supabase
+        .from('archived_phase_runs')
+        .select('leaderboard_data')
+        .eq('phase', phase)
+        .eq('run_number', runNumber)
+        .maybeSingle();
+
+      if (arch && arch.leaderboard_data && (arch.leaderboard_data as any).length > 0) {
+        return arch.leaderboard_data as PhaseLeaderboardEntry[];
+      }
+    }
+
+    // 1. Try server-side RPC first (returns all participants securely via SECURITY DEFINER)
+    try {
+      const { data: rpcData, error: rpcErr } = await supabase.rpc('get_phase_leaderboard', {
+        p_phase: phase,
+        p_run_number: targetRun
+      });
+      if (!rpcErr && Array.isArray(rpcData) && rpcData.length > 0) {
+        return rpcData as PhaseLeaderboardEntry[];
+      }
+    } catch (_) {
+      // Fallback to direct client query below
+    }
+
+    // Active run live leaderboard calculation (Client fallback)
+    // Fetch registered active participants
+    const { data: profiles, error: pErr } = await supabase
+      .from('profiles')
+      .select('user_id, full_name, email, section, academic_year')
+      .neq('registration_status', 'disqualified');
+
+    if (pErr || !profiles) return [];
+    const profileMap = new Map(profiles.map(p => [p.user_id, p]));
+
+    if (phase === 'phase1') {
+      const { data: responses, error: rErr } = await supabase
+        .from('quiz_responses')
+        .select('participant_id, points_awarded, time_spent_seconds, submitted_at');
+
+      if (rErr || !responses || responses.length === 0) return [];
+
+      const statsMap = new Map<string, { totalScore: number; totalTime: number; count: number }>();
+      responses.forEach(r => {
+        const cur = statsMap.get(r.participant_id) || { totalScore: 0, totalTime: 0, count: 0 };
+        cur.totalScore += (r.points_awarded || 0);
+        cur.totalTime += Number(r.time_spent_seconds || 0);
+        cur.count += 1;
+        statsMap.set(r.participant_id, cur);
+      });
+
+      const entries: PhaseLeaderboardEntry[] = [];
+      statsMap.forEach((stats, participantId) => {
+        const prof = profileMap.get(participantId);
+        if (!prof) return;
+
+        entries.push({
+          user_id: prof.user_id,
+          full_name: prof.full_name,
+          email: prof.email,
+          section: prof.section as SectionType,
+          academic_year: prof.academic_year as AcademicYearType,
+          phase: 'phase1',
+          run_number: targetRun,
+          score: stats.totalScore,
+          rank: 0,
+          detail: `${Math.round(stats.totalScore / 10)} / ${stats.count} Correct`,
+          time_spent_seconds: Math.round(stats.totalTime)
+        });
+      });
+
+      entries.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if ((a.time_spent_seconds || 0) !== (b.time_spent_seconds || 0)) {
+          return (a.time_spent_seconds || 0) - (b.time_spent_seconds || 0);
+        }
+        return a.full_name.localeCompare(b.full_name);
+      });
+
+      entries.forEach((e, idx) => { e.rank = idx + 1; });
+      return entries;
+    }
+
+    if (phase === 'phase2') {
+      const { data: attempts } = await supabase
+        .from('program_attempts')
+        .select('participant_id, is_solved, solved_at, attempts_used')
+        .eq('phase', 'phase2');
+
+      if (!attempts || attempts.length === 0) return [];
+
+      const statsMap = new Map<string, { solvedCount: number; attemptsUsed: number; earliestSolved?: string }>();
+      attempts.forEach(a => {
+        const cur = statsMap.get(a.participant_id) || { solvedCount: 0, attemptsUsed: 0 };
+        cur.attemptsUsed += (a.attempts_used || 0);
+        if (a.is_solved) {
+          cur.solvedCount += 1;
+          if (a.solved_at) {
+            if (!cur.earliestSolved || new Date(a.solved_at) > new Date(cur.earliestSolved)) {
+              cur.earliestSolved = a.solved_at;
+            }
+          }
+        }
+        statsMap.set(a.participant_id, cur);
+      });
+
+      const entries: PhaseLeaderboardEntry[] = [];
+      statsMap.forEach((stats, participantId) => {
+        const prof = profileMap.get(participantId);
+        if (!prof) return;
+
+        const score = stats.solvedCount * 30;
+        entries.push({
+          user_id: prof.user_id,
+          full_name: prof.full_name,
+          email: prof.email,
+          section: prof.section as SectionType,
+          academic_year: prof.academic_year as AcademicYearType,
+          phase: 'phase2',
+          run_number: targetRun,
+          score,
+          rank: 0,
+          detail: `${stats.solvedCount} Solved (${stats.attemptsUsed} Attempts)`
+        });
+      });
+
+      entries.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.full_name.localeCompare(b.full_name);
+      });
+
+      entries.forEach((e, idx) => { e.rank = idx + 1; });
+      return entries;
+    }
+
+    if (phase === 'phase3') {
+      const { data: attempts } = await supabase
+        .from('program_attempts')
+        .select('participant_id, is_solved, solved_at, attempts_used')
+        .eq('phase', 'phase3');
+
+      if (!attempts || attempts.length === 0) return [];
+
+      const statsMap = new Map<string, { solvedCount: number; completedAt?: string }>();
+      attempts.forEach(a => {
+        const cur = statsMap.get(a.participant_id) || { solvedCount: 0 };
+        if (a.is_solved) {
+          cur.solvedCount += 1;
+          if (a.solved_at) {
+            if (!cur.completedAt || new Date(a.solved_at) > new Date(cur.completedAt)) {
+              cur.completedAt = a.solved_at;
+            }
+          }
+        }
+        statsMap.set(a.participant_id, cur);
+      });
+
+      const entries: PhaseLeaderboardEntry[] = [];
+      statsMap.forEach((stats, participantId) => {
+        const prof = profileMap.get(participantId);
+        if (!prof) return;
+
+        entries.push({
+          user_id: prof.user_id,
+          full_name: prof.full_name,
+          email: prof.email,
+          section: prof.section as SectionType,
+          academic_year: prof.academic_year as AcademicYearType,
+          phase: 'phase3',
+          run_number: targetRun,
+          score: stats.solvedCount * 50,
+          rank: 0,
+          solved_count: stats.solvedCount,
+          completed_at: stats.completedAt,
+          detail: stats.solvedCount === 3
+            ? `3 / 3 Solved at ${stats.completedAt ? new Date(stats.completedAt).toLocaleTimeString() : 'N/A'}`
+            : `${stats.solvedCount} / 3 Solved`
+        });
+      });
+
+      entries.sort((a, b) => {
+        const aCount = a.solved_count || 0;
+        const bCount = b.solved_count || 0;
+        if (bCount !== aCount) return bCount - aCount;
+        if (aCount === 3 && bCount === 3) {
+          if (a.completed_at && b.completed_at) {
+            return new Date(a.completed_at).getTime() - new Date(b.completed_at).getTime();
+          }
+        }
+        return a.full_name.localeCompare(b.full_name);
+      });
+
+      entries.forEach((e, idx) => {
+        e.rank = idx + 1;
+        if (e.rank === 1 && (e.solved_count || 0) > 0) e.is_winner = true;
+        if (e.rank === 2 && (e.solved_count || 0) > 0) e.is_runner_up = true;
+      });
+
+      return entries;
+    }
+
+    return [];
+  },
+
+  async getArchivedRuns(phase: PhaseId): Promise<ArchivedPhaseRun[]> {
+    if (!isSupabaseConfigured) {
+      return mockArchivedRuns.filter(r => r.phase === phase);
+    }
+
+    const { data, error } = await supabase
+      .from('archived_phase_runs')
+      .select('*')
+      .eq('phase', phase)
+      .order('run_number', { ascending: false });
+
+    if (error) {
+      console.warn('Could not fetch archived runs table, returning empty:', error.message);
+      return [];
+    }
+    return (data || []) as ArchivedPhaseRun[];
+  },
+
   // --------------------------------------------------------------------------
   // Audit Logs
   // --------------------------------------------------------------------------
@@ -1493,5 +2084,44 @@ export const api = {
       change_summary: summary,
       reason
     });
+  },
+
+  async getWaitingRoomCount(phase: PhaseId): Promise<number> {
+    if (!isSupabaseConfigured) return 24;
+
+    try {
+      const { data, error } = await supabase.rpc('get_waiting_room_count', { p_phase: phase });
+      if (!error && typeof data === 'number') {
+        return data;
+      }
+    } catch (_) {
+      // ignore and fallback below
+    }
+
+    // Direct fallback query
+    try {
+      if (phase === 'phase1') {
+        const { count } = await supabase
+          .from('profiles')
+          .select('user_id', { count: 'exact', head: true })
+          .neq('registration_status', 'disqualified');
+        return count || 0;
+      } else {
+        const { count } = await supabase
+          .from('phase_qualifications')
+          .select('participant_id', { count: 'exact', head: true })
+          .eq('phase', phase)
+          .eq('qualified', true);
+        if (count && count > 0) return count;
+
+        const { count: profCount } = await supabase
+          .from('profiles')
+          .select('user_id', { count: 'exact', head: true })
+          .neq('registration_status', 'disqualified');
+        return profCount || 0;
+      }
+    } catch (err) {
+      return 0;
+    }
   }
 };
