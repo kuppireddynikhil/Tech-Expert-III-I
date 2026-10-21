@@ -5,12 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import type { AdminAuditLog } from '../../types';
 import {
-  History,
-  Search,
-  Filter,
-  ShieldCheck,
-  Calendar,
-  FileText
+  Search
 } from 'lucide-react';
 
 export const AuditLogs: React.FC = () => {
@@ -45,19 +40,19 @@ export const AuditLogs: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Header */}
       <div>
-        <div className="badge badge-purple" style={{ marginBottom: '0.4rem' }}>
+        <div className="badge badge-primary" style={{ marginBottom: '0.4rem' }}>
           Compliance & Transparency
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>System Audit Logs</h1>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>System Audit Logs</h1>
+        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
           Immutable server-side audit records of all administrative actions, phase releases, timer changes, overrides, and account updates.
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+      <div className="card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <Search size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="var(--color-text-secondary)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             className="form-input"
@@ -85,40 +80,40 @@ export const AuditLogs: React.FC = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
                   Loading audit trail...
                 </td>
               </tr>
             ) : filteredLogs.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
                   No audit log entries matching your search.
                 </td>
               </tr>
             ) : (
               filteredLogs.map((log) => (
                 <tr key={log.id}>
-                  <td style={{ fontSize: '0.78rem', color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                  <td style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
                     {new Date(log.created_at).toLocaleString()}
                   </td>
                   <td>
-                    <div style={{ fontWeight: 600, color: '#FFFFFF', fontSize: '0.85rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--color-text)', fontSize: '0.875rem' }}>
                       {log.admin_email || log.admin_id?.slice(0, 8) || 'System / Bootstrap'}
                     </div>
                   </td>
                   <td>
-                    <span className="badge badge-purple" style={{ fontSize: '0.7rem' }}>
+                    <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>
                       {log.action}
                     </span>
                   </td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--cyan-400)' }}>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--color-primary)' }}>
                     {log.target_type}
                     {log.target_id && `:${log.target_id.slice(0, 8)}`}
                   </td>
-                  <td style={{ fontSize: '0.85rem', maxWidth: '300px' }}>
+                  <td style={{ fontSize: '0.875rem', maxWidth: '300px', color: 'var(--color-text)' }}>
                     {log.change_summary}
                   </td>
-                  <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: log.reason ? 'normal' : 'italic' }}>
+                  <td style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', fontStyle: log.reason ? 'normal' : 'italic' }}>
                     {log.reason || 'No reason provided'}
                   </td>
                 </tr>

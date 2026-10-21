@@ -18,7 +18,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  ShieldAlert,
+  ShieldCheck,
   KeyRound,
   ExternalLink,
   Menu,
@@ -34,7 +34,7 @@ export const AdminLayout: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [updatingPassword, setUpdatingPassword] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   if (loading) {
     return (
@@ -45,16 +45,18 @@ export const AdminLayout: React.FC = () => {
         justifyContent: 'center',
         flexDirection: 'column',
         gap: '1rem',
-        backgroundColor: 'var(--bg-dark)'
+        backgroundColor: 'var(--color-background)'
       }}>
         <div className="spinner" style={{
           width: '40px',
           height: '40px',
-          border: '3px solid rgba(168, 85, 247, 0.2)',
-          borderTopColor: 'var(--purple-400)',
+          border: '3px solid var(--color-primary-light)',
+          borderTopColor: 'var(--color-primary)',
           borderRadius: '50%'
         }} />
-        <div style={{ color: 'var(--text-muted)' }}>Verifying administrative security credentials...</div>
+        <div style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+          Verifying administrative security credentials...
+        </div>
       </div>
     );
   }
@@ -105,47 +107,79 @@ export const AdminLayout: React.FC = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-dark)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--color-background)' }}>
+      {/* Mobile Backdrop */}
+      {mobileSidebarOpen && (
+        <div
+          onClick={() => setMobileSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.4)',
+            zIndex: 45
+          }}
+        />
+      )}
+
       {/* Sidebar Navigation */}
-      <aside style={{
-        width: '260px',
-        backgroundColor: 'rgba(10, 15, 29, 0.95)',
-        borderRight: '1px solid var(--border-subtle)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        zIndex: 40
-      }}>
+      <aside
+        className={`admin-sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}
+        style={{
+          width: '260px',
+          backgroundColor: '#FFFFFF',
+          borderRight: '1px solid var(--color-border)',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          zIndex: 50,
+          boxShadow: 'var(--shadow-sm)'
+        }}
+      >
         {/* Brand */}
         <div style={{
           padding: '1.25rem 1.5rem',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.75rem'
+          justifyContent: 'space-between'
         }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: 'var(--radius-sm)',
-            background: 'var(--grad-purple)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-purple)'
-          }}>
-            <ShieldAlert size={20} color="#FFFFFF" />
-          </div>
-          <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.05rem', color: '#FFFFFF' }}>
-              ADMIN CONSOLE
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)'
+            }}>
+              <ShieldCheck size={20} color="#FFFFFF" />
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--purple-400)', letterSpacing: '0.04em' }}>
-              TECH EXPERT 2K26
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--color-text)' }}>
+                ADMIN CONSOLE
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--color-primary)', fontWeight: 600, letterSpacing: '0.04em' }}>
+                TECH EXPERT 2K26
+              </div>
             </div>
           </div>
+          <button
+            onClick={() => setMobileSidebarOpen(false)}
+            className="mobile-close-btn"
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
+              color: 'var(--color-text-secondary)',
+              cursor: 'pointer'
+            }}
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Links */}
@@ -153,7 +187,7 @@ export const AdminLayout: React.FC = () => {
           <div style={{
             fontSize: '0.68rem',
             textTransform: 'uppercase',
-            color: 'var(--text-dim)',
+            color: 'var(--color-text-secondary)',
             fontWeight: 700,
             letterSpacing: '0.05em',
             padding: '0.5rem 0.75rem'
@@ -168,24 +202,25 @@ export const AdminLayout: React.FC = () => {
               <Link
                 key={item.to}
                 to={item.to}
+                onClick={() => setMobileSidebarOpen(false)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.75rem',
                   padding: '0.65rem 0.85rem',
                   borderRadius: 'var(--radius-md)',
-                  color: isActive ? 'var(--cyan-400)' : 'var(--text-muted)',
-                  backgroundColor: isActive ? 'rgba(0, 242, 254, 0.08)' : 'transparent',
-                  border: isActive ? '1px solid rgba(0, 242, 254, 0.25)' : '1px solid transparent',
+                  color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  backgroundColor: isActive ? 'var(--color-primary-light)' : 'transparent',
+                  border: isActive ? '1px solid #BFDBFE' : '1px solid transparent',
                   fontWeight: isActive ? 600 : 500,
                   fontSize: '0.875rem',
                   marginBottom: '0.25rem',
                   transition: 'all var(--transition-fast)'
                 }}
               >
-                <Icon size={17} color={isActive ? 'var(--cyan-400)' : 'var(--text-dim)'} />
+                <Icon size={17} color={isActive ? 'var(--color-primary)' : 'var(--color-disabled)'} />
                 <span style={{ flex: 1 }}>{item.label}</span>
-                {isActive && <ChevronRight size={14} />}
+                {isActive && <ChevronRight size={14} color="var(--color-primary)" />}
               </Link>
             );
           })}
@@ -195,25 +230,25 @@ export const AdminLayout: React.FC = () => {
         <div style={{
           padding: '1rem',
           borderTop: '1px solid var(--border-subtle)',
-          backgroundColor: 'rgba(0, 0, 0, 0.2)'
+          backgroundColor: '#F8FAFC'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#FFFFFF', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                 {user.email}
               </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--emerald-400)' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--color-success)', fontWeight: 600 }}>
                 Active Admin Session
               </div>
             </div>
-            <Link to="/" target="_blank" title="View Participant Site" style={{ color: 'var(--text-muted)' }}>
+            <Link to="/" target="_blank" title="View Participant Site" style={{ color: 'var(--color-text-secondary)' }}>
               <ExternalLink size={16} />
             </Link>
           </div>
           <button
             onClick={() => signOut()}
             className="btn btn-secondary btn-sm"
-            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}
           >
             <LogOut size={14} />
             Sign Out
@@ -223,11 +258,43 @@ export const AdminLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* Mobile Top Bar */}
+        <div
+          className="admin-mobile-topbar"
+          style={{
+            display: 'none',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0.75rem 1.25rem',
+            backgroundColor: '#FFFFFF',
+            borderBottom: '1px solid var(--color-border)'
+          }}
+        >
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--color-text)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <Menu size={20} />
+            <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Admin Menu</span>
+          </button>
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+            TECH EXPERT 2K26
+          </div>
+        </div>
+
         {/* Top Notification Bar for Bootstrap Password Change Requirement */}
         {mustChangePassword && (
           <div style={{
-            backgroundColor: 'rgba(245, 158, 11, 0.15)',
-            borderBottom: '1px solid var(--amber-400)',
+            backgroundColor: '#FFFBEB',
+            borderBottom: '1px solid #FDE68A',
             padding: '0.75rem 1.5rem',
             display: 'flex',
             alignItems: 'center',
@@ -236,9 +303,9 @@ export const AdminLayout: React.FC = () => {
             gap: '1rem'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <KeyRound size={18} color="var(--amber-400)" />
-              <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>
-                <strong>Security Alert:</strong> You are using the initial bootstrap administrator credentials. Please change your password now to secure the event.
+              <KeyRound size={18} color="var(--color-warning)" />
+              <span style={{ fontSize: '0.875rem', color: '#92400E' }}>
+                <strong>Security Alert:</strong> You are using initial bootstrap administrator credentials. Please change your password now to secure the event.
               </span>
             </div>
             <button
@@ -265,8 +332,8 @@ export const AdminLayout: React.FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            backdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(4px)',
             zIndex: 100,
             display: mustChangePassword ? 'flex' : 'none',
             alignItems: 'center',
@@ -274,22 +341,22 @@ export const AdminLayout: React.FC = () => {
             padding: '1.5rem'
           }}
         >
-          <div className="glass-card-glow" style={{ maxWidth: '480px', width: '100%', padding: '2rem' }}>
+          <div className="glass-card" style={{ maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-modal)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
               <div style={{
                 width: '40px',
                 height: '40px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(0, 242, 254, 0.15)',
+                backgroundColor: 'var(--color-primary-light)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <KeyRound size={20} color="var(--cyan-400)" />
+                <KeyRound size={20} color="var(--color-primary)" />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.25rem' }}>Change Initial Password</h3>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--color-text)', margin: 0 }}>Change Initial Password</h3>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
                   Mandatory bootstrap requirement for Tech Expert 2K26
                 </div>
               </div>
@@ -337,6 +404,27 @@ export const AdminLayout: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Responsive Styles for Sidebar */}
+      <style>{`
+        @media (max-width: 900px) {
+          .admin-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: -280px !important;
+            transition: left 0.25s ease !important;
+          }
+          .admin-sidebar.mobile-open {
+            left: 0 !important;
+          }
+          .mobile-close-btn {
+            display: block !important;
+          }
+          .admin-mobile-topbar {
+            display: flex !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

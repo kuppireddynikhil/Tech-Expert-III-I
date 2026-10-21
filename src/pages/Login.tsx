@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { LogIn, Terminal, AlertCircle, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { LogIn, AlertCircle, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ export const Login: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -67,31 +68,31 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="container-narrow">
-      <div className="glass-card" style={{ padding: '2.5rem', maxWidth: '480px', margin: '0 auto' }}>
+    <div className="container-narrow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '75vh' }}>
+      <div className="glass-card" style={{ padding: '2.5rem', maxWidth: '460px', width: '100%', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
-            width: '50px',
-            height: '50px',
+            width: '52px',
+            height: '52px',
             borderRadius: 'var(--radius-md)',
-            background: 'var(--grad-cyan)',
-            margin: '0 auto 1rem auto',
+            backgroundColor: 'var(--color-primary-light)',
+            border: '1px solid #BFDBFE',
+            margin: '0 auto 1.25rem auto',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-cyan)'
+            justifyContent: 'center'
           }}>
-            <LogIn size={24} color="#070B14" />
+            <LogIn size={26} color="var(--color-primary)" />
           </div>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Participant Sign In</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          <h2 style={{ fontSize: '1.75rem', marginBottom: '0.4rem', color: 'var(--color-text)' }}>Participant Sign In</h2>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
             Tech Expert 2K26 — SVCE Competition Portal
           </p>
         </div>
 
         {error && (
           <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <AlertCircle size={18} />
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
             <span>{error}</span>
           </div>
         )}
@@ -111,29 +112,52 @@ export const Login: React.FC = () => {
 
           <div className="form-group">
             <label className="form-label">Password</label>
-            <input
-              type="password"
-              className="form-input"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="form-input"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ paddingRight: '2.5rem' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-text-secondary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0.25rem'
+                }}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
             className="btn btn-primary btn-lg"
-            style={{ width: '100%', marginTop: '1rem' }}
+            style={{ width: '100%', marginTop: '1.25rem' }}
           >
             {loading ? 'Authenticating...' : 'Sign In to Event'}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
           Don't have an account?{' '}
-          <Link to="/register" style={{ color: 'var(--cyan-400)', fontWeight: 600 }}>
+          <Link to="/register" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
             Register Now
           </Link>
         </div>
@@ -145,8 +169,8 @@ export const Login: React.FC = () => {
           textAlign: 'center',
           fontSize: '0.8rem'
         }}>
-          <Link to="/admin/login" style={{ color: 'var(--purple-400)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-            <ShieldAlert size={14} /> Event Administrator Login
+          <Link to="/admin/login" style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 500 }}>
+            <ShieldAlert size={15} /> Event Administrator Login
           </Link>
         </div>
       </div>

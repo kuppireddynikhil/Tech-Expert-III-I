@@ -5,18 +5,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { api } from '../../services/api';
-import type { Question, PhaseId, QuestionType, QuestionDifficulty, QuestionChoice } from '../../types';
+import type { PhaseId, QuestionType, QuestionDifficulty, QuestionChoice } from '../../types';
 import {
   Save,
   ArrowLeft,
   Plus,
-  Trash2,
-  Code2,
-  HelpCircle,
-  FileCode,
-  Lock,
-  Clock,
-  Sparkles
+  Trash2
 } from 'lucide-react';
 
 export const QuestionEditor: React.FC = () => {
@@ -162,8 +156,8 @@ export const QuestionEditor: React.FC = () => {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '5rem 0' }}>
-        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto', border: '3px solid rgba(0, 242, 254, 0.2)', borderTopColor: 'var(--cyan-400)', borderRadius: '50%' }} />
-        <p style={{ color: 'var(--text-muted)' }}>Loading question configuration...</p>
+        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto' }} />
+        <p style={{ color: 'var(--color-text-secondary)' }}>Loading question configuration...</p>
       </div>
     );
   }
@@ -173,10 +167,10 @@ export const QuestionEditor: React.FC = () => {
       {/* Top Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Link to="/admin/questions" className="btn btn-secondary btn-sm">
+          <Link to="/admin/questions" className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
             <ArrowLeft size={14} /> Back to Bank
           </Link>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>
             {isEditing ? 'Edit Competition Question' : 'Create New Competition Question'}
           </h1>
         </div>
@@ -184,7 +178,7 @@ export const QuestionEditor: React.FC = () => {
 
       {error && <div className="alert alert-danger">{error}</div>}
 
-      <form onSubmit={handleSubmit} className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <form onSubmit={handleSubmit} className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* Phase, Type & Difficulty Selection Row */}
         <div className="grid-3">
           <div>
@@ -262,8 +256,8 @@ export const QuestionEditor: React.FC = () => {
         {/* Conditional MCQ Editor */}
         {questionType === 'mcq' && (
           <div style={{
-            backgroundColor: 'rgba(0,0,0,0.25)',
-            border: '1px solid var(--border-subtle)',
+            backgroundColor: 'var(--color-surface-secondary)',
+            border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-md)',
             padding: '1.5rem',
             display: 'flex',
@@ -271,10 +265,10 @@ export const QuestionEditor: React.FC = () => {
             gap: '1rem'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--cyan-400)' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-text)' }}>
                 Multiple Choice Options
               </div>
-              <button type="button" onClick={handleAddChoice} className="btn btn-secondary btn-sm">
+              <button type="button" onClick={handleAddChoice} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Plus size={13} /> Add Choice
               </button>
             </div>
@@ -285,12 +279,15 @@ export const QuestionEditor: React.FC = () => {
                   width: '32px',
                   height: '32px',
                   borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  backgroundColor: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 800,
-                  fontSize: '0.85rem'
+                  fontSize: '0.85rem',
+                  flexShrink: 0
                 }}>
                   {c.id}
                 </div>
@@ -315,9 +312,9 @@ export const QuestionEditor: React.FC = () => {
 
             {/* Correct Answer Selection */}
             <div style={{ marginTop: '0.5rem' }}>
-              <label className="form-label">
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Private Correct Answer</span>
-                <span className="badge badge-purple" style={{ fontSize: '0.65rem' }}>Protected by RLS</span>
+                <span className="badge badge-secondary" style={{ fontSize: '0.7rem' }}>Protected by RLS</span>
               </label>
               <select
                 className="form-select"
@@ -340,15 +337,15 @@ export const QuestionEditor: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Starter Code Editor */}
             <div>
-              <label className="form-label">
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Starter Code (Participant Starting Code)</span>
-                <span className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>Monaco Editor</span>
+                <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>Monaco Editor</span>
               </label>
-              <div style={{ height: '240px', border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <div style={{ height: '240px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                 <Editor
                   height="100%"
                   defaultLanguage="python"
-                  theme="vs-dark"
+                  theme="vs"
                   value={starterCode}
                   onChange={(val) => setStarterCode(val || '')}
                   options={{ minimap: { enabled: false }, fontSize: 13 }}
@@ -358,15 +355,15 @@ export const QuestionEditor: React.FC = () => {
 
             {/* Reference Solution Editor (PRIVATE) */}
             <div>
-              <label className="form-label">
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Private Reference Solution (Hidden from Participants)</span>
-                <span className="badge badge-purple" style={{ fontSize: '0.65rem' }}>RLS Protected</span>
+                <span className="badge badge-secondary" style={{ fontSize: '0.7rem' }}>RLS Protected</span>
               </label>
-              <div style={{ height: '240px', border: '1px solid var(--border-medium)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <div style={{ height: '240px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                 <Editor
                   height="100%"
                   defaultLanguage="python"
-                  theme="vs-dark"
+                  theme="vs"
                   value={referenceSolution}
                   onChange={(val) => setReferenceSolution(val || '')}
                   options={{ minimap: { enabled: false }, fontSize: 13 }}
@@ -376,9 +373,9 @@ export const QuestionEditor: React.FC = () => {
 
             {/* Evaluation Rubric / Test Cases */}
             <div>
-              <label className="form-label">
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Private Evaluation Rubric (JSON Format)</span>
-                <span className="badge badge-purple" style={{ fontSize: '0.65rem' }}>Used by Gemini AI</span>
+                <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>Used by Gemini AI</span>
               </label>
               <textarea
                 className="form-textarea"
@@ -437,19 +434,19 @@ export const QuestionEditor: React.FC = () => {
             id="is-published"
             checked={isPublished}
             onChange={(e) => setIsPublished(e.target.checked)}
-            style={{ width: '18px', height: '18px', accentColor: 'var(--cyan-400)', cursor: 'pointer' }}
+            style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
           />
-          <label htmlFor="is-published" style={{ fontSize: '0.9rem', cursor: 'pointer' }}>
+          <label htmlFor="is-published" style={{ fontSize: '0.9rem', cursor: 'pointer', color: 'var(--color-text)' }}>
             Publish question immediately (Available for question set assignments)
           </label>
         </div>
 
         {/* Submit Bar */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>
           <Link to="/admin/questions" className="btn btn-secondary">
             Cancel
           </Link>
-          <button type="submit" disabled={saving} className="btn btn-primary btn-lg">
+          <button type="submit" disabled={saving} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
             <Save size={16} />
             {saving ? 'Saving to Database...' : isEditing ? 'Update Question' : 'Create Question'}
           </button>

@@ -2,28 +2,20 @@
 // Sri Venkateswara College of Engineering (SVCE)
 
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
-import type { Question, PhaseId, QuestionType } from '../../types';
+import type { Question } from '../../types';
 import {
-  Database,
   Plus,
   Search,
-  Filter,
   Copy,
   Archive,
   Edit3,
   Eye,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Layers,
-  Sparkles
+  X
 } from 'lucide-react';
 
 export const QuestionBank: React.FC = () => {
-  const navigate = useNavigate();
-
   const [questions, setQuestions] = useState<Question[]>([]);
   const [search, setSearch] = useState('');
   const [selectedPhase, setSelectedPhase] = useState<string>('ALL');
@@ -93,24 +85,24 @@ export const QuestionBank: React.FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <div className="badge badge-purple" style={{ marginBottom: '0.4rem' }}>
+          <div className="badge badge-primary" style={{ marginBottom: '0.4rem' }}>
             Central Repository
           </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Question Bank</h1>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>Question Bank</h1>
+          <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
             Manage questions, answer choices, faulty programs, rubrics, and custom timers.
           </div>
         </div>
 
-        <Link to="/admin/questions/new" className="btn btn-primary">
+        <Link to="/admin/questions/new" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
           <Plus size={16} /> Create New Question
         </Link>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ flex: '1 1 260px', position: 'relative' }}>
-          <Search size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="var(--color-text-secondary)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             className="form-input"
@@ -123,12 +115,12 @@ export const QuestionBank: React.FC = () => {
 
         {/* Phase Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Phase:</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Phase:</span>
           <select
             className="form-select"
             value={selectedPhase}
             onChange={(e) => setSelectedPhase(e.target.value)}
-            style={{ width: '130px', padding: '0.55rem 0.75rem', fontSize: '0.85rem' }}
+            style={{ width: '130px', padding: '0.55rem 0.75rem', fontSize: '0.875rem' }}
           >
             <option value="ALL">All Phases</option>
             <option value="phase1">Phase 1 (Quiz)</option>
@@ -139,12 +131,12 @@ export const QuestionBank: React.FC = () => {
 
         {/* Type Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Type:</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Type:</span>
           <select
             className="form-select"
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            style={{ width: '130px', padding: '0.55rem 0.75rem', fontSize: '0.85rem' }}
+            style={{ width: '130px', padding: '0.55rem 0.75rem', fontSize: '0.875rem' }}
           >
             <option value="ALL">All Types</option>
             <option value="mcq">MCQ</option>
@@ -171,29 +163,29 @@ export const QuestionBank: React.FC = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
                   Loading question bank...
                 </td>
               </tr>
             ) : filteredQuestions.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
                   No questions match your current filters.
                 </td>
               </tr>
             ) : (
               filteredQuestions.map((q) => {
-                let phaseBadge = 'badge-cyan';
-                if (q.phase === 'phase2') phaseBadge = 'badge-purple';
-                if (q.phase === 'phase3') phaseBadge = 'badge-rose';
+                let phaseBadge = 'badge-primary';
+                if (q.phase === 'phase2') phaseBadge = 'badge-secondary';
+                if (q.phase === 'phase3') phaseBadge = 'badge-primary';
 
                 return (
                   <tr key={q.id}>
                     <td style={{ maxWidth: '360px' }}>
-                      <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{q.title}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{q.title}</div>
                       <div style={{
-                        fontSize: '0.78rem',
-                        color: 'var(--text-dim)',
+                        fontSize: '0.8rem',
+                        color: 'var(--color-text-secondary)',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap'
@@ -202,7 +194,7 @@ export const QuestionBank: React.FC = () => {
                       </div>
                       <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
                         {q.tags?.map((tag, i) => (
-                          <span key={i} style={{ fontSize: '0.65rem', color: 'var(--cyan-400)' }}>
+                          <span key={i} style={{ fontSize: '0.72rem', color: 'var(--color-primary)', fontWeight: 500 }}>
                             #{tag}
                           </span>
                         ))}
@@ -212,24 +204,24 @@ export const QuestionBank: React.FC = () => {
                       <span className={`badge ${phaseBadge}`}>{q.phase.toUpperCase()}</span>
                     </td>
                     <td>
-                      <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+                      <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', color: 'var(--color-text-secondary)' }}>
                         {q.question_type}
                       </span>
                     </td>
                     <td>
                       {q.custom_timer ? (
-                        <span style={{ color: 'var(--amber-400)', fontWeight: 600 }}>{q.custom_timer}s</span>
+                        <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{q.custom_timer}s</span>
                       ) : (
-                        <span style={{ color: 'var(--text-dim)' }}>Inherited</span>
+                        <span style={{ color: 'var(--color-text-secondary)' }}>Inherited</span>
                       )}
                     </td>
                     <td>
-                      <span style={{ fontWeight: 700, color: 'var(--emerald-400)' }}>{q.scoring_points} pts</span>
+                      <span style={{ fontWeight: 700, color: 'var(--color-success)' }}>{q.scoring_points} pts</span>
                     </td>
                     <td>
                       <button
                         onClick={() => handleTogglePublish(q)}
-                        className={`badge ${q.is_published ? 'badge-emerald' : 'badge-amber'}`}
+                        className={`badge ${q.is_published ? 'badge-success' : 'badge-warning'}`}
                         style={{ cursor: 'pointer', border: 'none' }}
                         title="Click to toggle publication status"
                       >
@@ -281,28 +273,28 @@ export const QuestionBank: React.FC = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(15, 23, 42, 0.6)',
+          backdropFilter: 'blur(4px)',
           zIndex: 100,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '1.5rem'
         }}>
-          <div className="glass-card-glow" style={{ maxWidth: '650px', width: '100%', maxHeight: '85vh', overflowY: 'auto', padding: '2rem' }}>
+          <div className="card" style={{ maxWidth: '650px', width: '100%', maxHeight: '85vh', overflowY: 'auto', padding: '2rem', boxShadow: 'var(--shadow-modal)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
               <div>
-                <span className="badge badge-purple" style={{ marginBottom: '0.35rem' }}>
+                <span className="badge badge-primary" style={{ marginBottom: '0.35rem' }}>
                   PARTICIPANT-FACING PREVIEW
                 </span>
-                <h3 style={{ fontSize: '1.35rem' }}>{previewQuestion.title}</h3>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>{previewQuestion.title}</h3>
               </div>
-              <button onClick={() => setPreviewQuestion(null)} className="btn btn-secondary btn-sm">
-                Close
+              <button onClick={() => setPreviewQuestion(null)} style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>
+                <X size={20} />
               </button>
             </div>
 
-            <div style={{ fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '1.5rem', whiteSpace: 'pre-wrap' }}>
+            <div style={{ fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '1.5rem', whiteSpace: 'pre-wrap', color: 'var(--color-text)' }}>
               {previewQuestion.problem_statement}
             </div>
 
@@ -311,12 +303,13 @@ export const QuestionBank: React.FC = () => {
                 {previewQuestion.choices.map((c) => (
                   <div key={c.id} style={{
                     padding: '0.75rem 1rem',
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                    border: '1px solid var(--border-subtle)',
+                    backgroundColor: 'var(--color-surface-secondary)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    color: 'var(--color-text)'
                   }}>
-                    <strong>{c.id}.</strong> {c.text}
+                    <strong style={{ color: 'var(--color-primary)' }}>{c.id}.</strong> {c.text}
                   </div>
                 ))}
               </div>
@@ -324,16 +317,17 @@ export const QuestionBank: React.FC = () => {
 
             {previewQuestion.starter_code && (
               <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: '0.3rem' }}>
+                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 700, marginBottom: '0.3rem' }}>
                   Starter Code
                 </div>
                 <pre style={{
                   padding: '1rem',
-                  backgroundColor: 'rgba(0,0,0,0.5)',
+                  backgroundColor: 'var(--color-surface-secondary)',
                   borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-subtle)',
+                  border: '1px solid var(--color-border)',
                   fontSize: '0.85rem',
-                  color: 'var(--cyan-400)',
+                  color: 'var(--color-text)',
+                  fontFamily: 'var(--font-mono)',
                   overflowX: 'auto'
                 }}>
                   {previewQuestion.starter_code}
@@ -342,15 +336,15 @@ export const QuestionBank: React.FC = () => {
             )}
 
             <div style={{
-              borderTop: '1px solid var(--border-subtle)',
+              borderTop: '1px solid var(--color-border)',
               paddingTop: '1rem',
               display: 'flex',
               justifyContent: 'space-between',
-              fontSize: '0.8rem',
-              color: 'var(--text-muted)'
+              fontSize: '0.85rem',
+              color: 'var(--color-text-secondary)'
             }}>
-              <span>Points: {previewQuestion.scoring_points} pts</span>
-              <span>Timer: {previewQuestion.custom_timer ? `${previewQuestion.custom_timer}s` : 'Inherited from set'}</span>
+              <span>Points: <strong style={{ color: 'var(--color-primary)' }}>{previewQuestion.scoring_points} pts</strong></span>
+              <span>Timer: <strong style={{ color: 'var(--color-text)' }}>{previewQuestion.custom_timer ? `${previewQuestion.custom_timer}s` : 'Inherited from set'}</strong></span>
             </div>
           </div>
         </div>

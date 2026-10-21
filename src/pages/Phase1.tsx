@@ -343,8 +343,8 @@ export const Phase1: React.FC = () => {
   if (loading) {
     return (
       <div className="container" style={{ textAlign: 'center', padding: '5rem 0' }}>
-        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto', border: '3px solid rgba(0, 242, 254, 0.2)', borderTopColor: 'var(--cyan-400)', borderRadius: '50%' }} />
-        <p style={{ color: 'var(--text-muted)' }}>Verifying exam session and loading assigned question set...</p>
+        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto', border: '3px solid var(--color-primary-light)', borderTopColor: 'var(--color-primary)', borderRadius: '50%' }} />
+        <p style={{ color: 'var(--color-text-secondary)' }}>Verifying exam session and loading assigned question set...</p>
       </div>
     );
   }
@@ -358,70 +358,70 @@ export const Phase1: React.FC = () => {
             width: '64px',
             height: '64px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(245, 158, 11, 0.15)',
-            border: '2px solid var(--amber-400)',
+            backgroundColor: '#FEF3C7',
+            border: '2px solid var(--color-warning)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1.5rem auto'
           }}>
-            <ShieldAlert size={32} color="var(--amber-400)" />
+            <ShieldAlert size={32} color="var(--color-warning)" />
           </div>
 
           <span className="badge badge-amber" style={{ marginBottom: '0.75rem' }}>
             EXAM ATTEMPT POLICY RESTRICTION
           </span>
 
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '0.75rem' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--color-text)' }}>
             Exam Access Restricted
           </h2>
 
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
             {blockedReason}
           </p>
 
           {/* Administrative Re-entry Request Section */}
           <div style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backgroundColor: '#F8FAFC',
             borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)',
+            border: '1px solid var(--color-border)',
             padding: '1.5rem',
             marginBottom: '1.75rem',
             textAlign: 'left'
           }}>
-            <h4 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#FFFFFF' }}>
+            <h4 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>
               Administrator Re-Entry Request
             </h4>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
               In accordance with SVCE Tech Expert 2K26 examination governance, re-entry requires explicit administrator authorization.
             </p>
 
             {phaseControl?.status === 'closed' ? (
               <div style={{
                 padding: '1.25rem',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid var(--rose-400)',
+                backgroundColor: '#FEF2F2',
+                border: '1px solid #FCA5A5',
                 borderRadius: 'var(--radius-sm)',
-                color: 'var(--rose-400)',
+                color: 'var(--color-danger)',
                 fontSize: '0.9rem',
                 textAlign: 'center'
               }}>
                 <Lock size={28} style={{ margin: '0 auto 0.5rem auto' }} />
-                <strong style={{ display: 'block', color: '#FFFFFF', marginBottom: '0.3rem', fontSize: '1rem' }}>
+                <strong style={{ display: 'block', color: 'var(--color-text)', marginBottom: '0.3rem', fontSize: '1rem' }}>
                   Phase 1 Concluded & Submissions Locked
                 </strong>
                 The event administrator has closed Phase 1 for all participants. All answers have been submitted, and re-entry requests are no longer accepted.
-                <div style={{ marginTop: '0.75rem', fontSize: '1.15rem', fontWeight: 800, color: 'var(--cyan-400)' }}>
+                <div style={{ marginTop: '0.75rem', fontSize: '1.15rem', fontWeight: 800, color: 'var(--color-primary)' }}>
                   Recorded Score: {session?.final_score ?? totalScore} PTS
                 </div>
               </div>
             ) : session?.reentry_status === 'requested' ? (
               <div style={{
                 padding: '1rem',
-                backgroundColor: 'rgba(0, 242, 254, 0.1)',
-                border: '1px solid var(--cyan-400)',
+                backgroundColor: 'var(--color-primary-light)',
+                border: '1px solid #BFDBFE',
                 borderRadius: 'var(--radius-sm)',
-                color: 'var(--cyan-400)',
+                color: 'var(--color-primary)',
                 fontSize: '0.9rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -445,10 +445,10 @@ export const Phase1: React.FC = () => {
             ) : session?.reentry_status === 'rejected' ? (
               <div style={{
                 padding: '1rem',
-                backgroundColor: 'rgba(244, 63, 94, 0.1)',
-                border: '1px solid var(--rose-400)',
+                backgroundColor: '#FEF2F2',
+                border: '1px solid #FCA5A5',
                 borderRadius: 'var(--radius-sm)',
-                color: 'var(--rose-400)',
+                color: 'var(--color-danger)',
                 fontSize: '0.9rem'
               }}>
                 Your re-entry request was reviewed and rejected by the administrator.
@@ -497,9 +497,9 @@ export const Phase1: React.FC = () => {
     return (
       <div className="container-narrow">
         <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center' }}>
-          <AlertTriangle size={48} color="var(--amber-400)" style={{ margin: '0 auto 1rem auto' }} />
-          <h2 style={{ marginBottom: '1rem' }}>Phase 1 Status Notice</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{error}</p>
+          <AlertTriangle size={48} color="var(--color-warning)" style={{ margin: '0 auto 1rem auto' }} />
+          <h2 style={{ marginBottom: '1rem', color: 'var(--color-text)' }}>Phase 1 Status Notice</h2>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: '1.5rem' }}>{error}</p>
           <Link to="/dashboard" className="btn btn-secondary">
             &larr; Return to Dashboard
           </Link>
@@ -511,22 +511,22 @@ export const Phase1: React.FC = () => {
   if (quizCompleted) {
     return (
       <div className="container-narrow">
-        <div className="glass-card-glow" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
+        <div className="glass-card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
           <div style={{
             width: '70px',
             height: '70px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+            backgroundColor: '#DCFCE7',
             margin: '0 auto 1.5rem auto',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            border: '2px solid var(--emerald-400)'
+            border: '2px solid var(--color-success)'
           }}>
-            <Trophy size={36} color="var(--amber-400)" />
+            <Trophy size={36} color="var(--color-warning)" />
           </div>
-          <h2 style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>Phase 1 Completed!</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '2.2rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>Phase 1 Completed!</h2>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>
             Your answers have been verified and scored on the server.
           </p>
 
@@ -534,20 +534,20 @@ export const Phase1: React.FC = () => {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '2rem',
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backgroundColor: '#F8FAFC',
             padding: '1.5rem 2.5rem',
             borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-subtle)',
+            border: '1px solid var(--color-border)',
             marginBottom: '2.5rem'
           }}>
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Final Score</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--cyan-400)' }}>{totalScore} pts</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Final Score</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--color-primary)' }}>{totalScore} pts</div>
             </div>
-            <div style={{ width: '1px', height: '40px', backgroundColor: 'var(--border-subtle)' }} />
+            <div style={{ width: '1px', height: '40px', backgroundColor: 'var(--color-border)' }} />
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Questions</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#FFFFFF' }}>{questions.length}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total Questions</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--color-text)' }}>{questions.length}</div>
             </div>
           </div>
 
@@ -578,9 +578,9 @@ export const Phase1: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className="badge badge-cyan">PHASE 1 — QUICK QUIZ</span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{questionSet?.set_name}</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{questionSet?.set_name}</span>
           </div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF', marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text)', marginTop: '0.25rem' }}>
             Question {currentIndex + 1} of {questions.length}
           </div>
         </div>
@@ -602,7 +602,7 @@ export const Phase1: React.FC = () => {
       <div style={{
         width: '100%',
         height: '6px',
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        backgroundColor: 'var(--color-surface-secondary)',
         borderRadius: 'var(--radius-full)',
         overflow: 'hidden',
         marginBottom: '2rem'
@@ -610,7 +610,7 @@ export const Phase1: React.FC = () => {
         <div style={{
           width: `${((currentIndex + 1) / questions.length) * 100}%`,
           height: '100%',
-          background: 'var(--grad-primary)',
+          backgroundColor: 'var(--color-primary)',
           transition: 'width 0.3s ease'
         }} />
       </div>
@@ -625,28 +625,27 @@ export const Phase1: React.FC = () => {
                   width: '68px',
                   height: '68px',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                  border: '2px solid var(--amber-400)',
-                  boxShadow: '0 0 30px rgba(245, 158, 11, 0.35)',
+                  backgroundColor: '#FEF3C7',
+                  border: '2px solid var(--color-warning)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 1.5rem auto'
                 }}
               >
-                <Clock size={36} color="var(--amber-400)" />
+                <Clock size={36} color="var(--color-warning)" />
               </div>
               <span className="badge badge-amber" style={{ marginBottom: '0.75rem', fontSize: '0.8rem' }}>
                 EXAMINATION PAUSED BY ADMINISTRATOR
               </span>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.5rem' }}>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text)', marginBottom: '0.5rem' }}>
                 Questions & Timer Paused
               </h2>
-              <p style={{ color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 1.5rem auto', lineHeight: 1.6, fontSize: '0.95rem' }}>
+              <p style={{ color: 'var(--color-text-secondary)', maxWidth: '480px', margin: '0 auto 1.5rem auto', lineHeight: 1.6, fontSize: '0.95rem' }}>
                 The administrator has paused Phase 1. Question content and choices are hidden and the question timer has stopped. Your previous answers are recorded. Please remain on this screen.
               </p>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--amber-400)', fontSize: '0.9rem', fontWeight: 600 }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--amber-400)', animation: 'pulse 1s infinite' }} />
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-warning)', fontSize: '0.9rem', fontWeight: 600 }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-warning)', animation: 'pulse 1s infinite' }} />
                 Waiting for administrator to resume exam...
               </div>
             </div>
@@ -666,7 +665,7 @@ export const Phase1: React.FC = () => {
                 ))}
               </div>
 
-              <h3 style={{ fontSize: '1.35rem', lineHeight: 1.5, marginBottom: '2rem' }}>
+              <h3 style={{ fontSize: '1.35rem', lineHeight: 1.5, marginBottom: '2rem', color: 'var(--color-text)', fontWeight: 700 }}>
                 {currentQuestion.problem_statement}
               </h3>
 
@@ -677,21 +676,25 @@ export const Phase1: React.FC = () => {
               const isCorrectAnswer = Boolean(lastResult?.correct_answers?.includes(choice.id));
               const isIncorrectSelection = Boolean(lastResult && isSelected && !lastResult.is_correct);
 
-              let choiceBorder = isSelected ? 'var(--cyan-400)' : 'var(--border-subtle)';
-              let choiceBg = isSelected ? 'rgba(0, 242, 254, 0.12)' : 'rgba(15, 23, 42, 0.6)';
+              let choiceBorder = isSelected ? 'var(--color-primary)' : 'var(--color-border)';
+              let choiceBg = isSelected ? 'var(--color-primary-light)' : '#FFFFFF';
+              let choiceTextColor = 'var(--color-text)';
 
               if (lastResult) {
                 if (isCorrectAnswer) {
                   // Highlight correct answer in green on timer expiry
-                  choiceBorder = 'var(--emerald-400)';
-                  choiceBg = 'rgba(16, 185, 129, 0.22)';
+                  choiceBorder = 'var(--color-success)';
+                  choiceBg = '#DCFCE7';
+                  choiceTextColor = '#15803D';
                 } else if (isIncorrectSelection) {
                   // Highlight participant's incorrect selection in red
-                  choiceBorder = 'var(--rose-400)';
-                  choiceBg = 'rgba(244, 63, 94, 0.22)';
+                  choiceBorder = 'var(--color-danger)';
+                  choiceBg = '#FEE2E2';
+                  choiceTextColor = '#B91C1C';
                 } else {
                   choiceBorder = 'var(--border-subtle)';
-                  choiceBg = 'rgba(15, 23, 42, 0.35)';
+                  choiceBg = '#F8FAFC';
+                  choiceTextColor = 'var(--color-text-secondary)';
                 }
               }
 
@@ -706,14 +709,15 @@ export const Phase1: React.FC = () => {
                     gap: '1rem',
                     padding: '1rem 1.25rem',
                     borderRadius: 'var(--radius-md)',
-                    border: `1px solid ${choiceBorder}`,
+                    border: `2px solid ${choiceBorder}`,
                     backgroundColor: choiceBg,
-                    color: '#FFFFFF',
+                    color: choiceTextColor,
                     textAlign: 'left',
                     cursor: submitting || lastResult ? 'default' : 'pointer',
                     transition: 'all var(--transition-fast)',
                     fontFamily: 'var(--font-sans)',
-                    fontSize: '0.95rem'
+                    fontSize: '0.95rem',
+                    fontWeight: isSelected ? 600 : 500
                   }}
                 >
                   <div style={{
@@ -721,13 +725,14 @@ export const Phase1: React.FC = () => {
                     height: '32px',
                     borderRadius: 'var(--radius-sm)',
                     backgroundColor: isCorrectAnswer 
-                      ? 'var(--emerald-400)' 
+                      ? 'var(--color-success)' 
                       : isIncorrectSelection 
-                        ? 'var(--rose-400)' 
+                        ? 'var(--color-danger)' 
                         : isSelected 
-                          ? 'var(--cyan-400)' 
-                          : 'rgba(255, 255, 255, 0.08)',
-                    color: (isSelected || isCorrectAnswer || isIncorrectSelection) ? '#031525' : 'var(--text-main)',
+                          ? 'var(--color-primary)' 
+                          : '#F1F5F9',
+                    color: (isSelected || isCorrectAnswer || isIncorrectSelection) ? '#FFFFFF' : 'var(--color-text)',
+                    border: (isSelected || isCorrectAnswer || isIncorrectSelection) ? 'none' : '1px solid var(--color-border)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -740,9 +745,9 @@ export const Phase1: React.FC = () => {
                   <span style={{ flex: 1 }}>{choice.text}</span>
                   {lastResult && (
                     isCorrectAnswer ? (
-                      <CheckCircle2 size={20} color="var(--emerald-400)" />
+                      <CheckCircle2 size={20} color="var(--color-success)" />
                     ) : isIncorrectSelection ? (
-                      <XCircle size={20} color="var(--rose-400)" />
+                      <XCircle size={20} color="var(--color-danger)" />
                     ) : null
                   )}
                 </button>
@@ -750,7 +755,7 @@ export const Phase1: React.FC = () => {
             })}
           </div>
 
-          {/* Action Footer: Manual Next button removed; Continue button rendered only after timer expiration */}
+          {/* Action Footer */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -760,25 +765,25 @@ export const Phase1: React.FC = () => {
             flexWrap: 'wrap',
             gap: '1rem'
           }}>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Current Running Score: <strong style={{ color: 'var(--cyan-400)' }}>{totalScore} pts</strong>
+            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+              Current Running Score: <strong style={{ color: 'var(--color-primary)' }}>{totalScore} pts</strong>
             </div>
 
-            {/* While timer is running, manual Next button is removed */}
+            {/* While timer is running, notice displayed */}
             {!lastResult && (
               <div style={{
                 fontSize: '0.85rem',
-                color: 'var(--text-muted)',
+                color: 'var(--color-text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
-                <Clock size={16} color="var(--cyan-400)" />
+                <Clock size={16} color="var(--color-primary)" />
                 <span>Timer active — answer locks automatically on expiration</span>
               </div>
             )}
 
-            {/* Result banner — flow advances automatically, no manual button */}
+            {/* Result banner — flow advances automatically */}
             {lastResult && (
               <div style={{
                 fontSize: '0.85rem',
@@ -786,7 +791,7 @@ export const Phase1: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                color: lastResult.is_correct ? 'var(--emerald-400)' : 'var(--rose-400)'
+                color: lastResult.is_correct ? 'var(--color-success)' : 'var(--color-danger)'
               }}>
                 {lastResult.is_correct ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
                 <span>

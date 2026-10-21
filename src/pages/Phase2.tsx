@@ -18,10 +18,8 @@ import {
   FileCode,
   Terminal,
   Cpu,
-  Layers,
   ArrowRight,
   RotateCcw,
-  Sparkles,
   Trophy,
   Lock
 } from 'lucide-react';
@@ -61,7 +59,7 @@ export const Phase2: React.FC = () => {
           return;
         }
 
-        // Feature 1: Waiting Room Redirect
+        // Waiting Room Redirect
         if (!p2.exam_started_at) {
           navigate('/waiting-room/phase2');
           return;
@@ -133,7 +131,7 @@ export const Phase2: React.FC = () => {
     loadPhase2();
   }, []);
 
-  // Periodic Phase Status and Force Closure / Pause Check
+  // Live polling for phase status
   useEffect(() => {
     if (loading || isClosed) return;
 
@@ -238,8 +236,8 @@ export const Phase2: React.FC = () => {
   if (loading) {
     return (
       <div className="container" style={{ textAlign: 'center', padding: '5rem 0' }}>
-        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto', border: '3px solid rgba(168, 85, 247, 0.2)', borderTopColor: 'var(--purple-400)', borderRadius: '50%' }} />
-        <p style={{ color: 'var(--text-muted)' }}>Loading Phase 2 Debugging Environment & Monaco Editor...</p>
+        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto', border: '3px solid var(--color-primary-light)', borderTopColor: 'var(--color-primary)', borderRadius: '50%' }} />
+        <p style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>Loading Phase 2 Debugging Environment & Editor...</p>
       </div>
     );
   }
@@ -248,9 +246,9 @@ export const Phase2: React.FC = () => {
     return (
       <div className="container-narrow">
         <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center' }}>
-          <AlertTriangle size={48} color="var(--amber-400)" style={{ margin: '0 auto 1rem auto' }} />
-          <h2 style={{ marginBottom: '1rem' }}>Phase 2 Notice</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{error}</p>
+          <AlertTriangle size={48} color="var(--color-warning)" style={{ margin: '0 auto 1rem auto' }} />
+          <h2 style={{ marginBottom: '1rem', color: 'var(--color-text)' }}>Phase 2 Notice</h2>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: '1.5rem' }}>{error}</p>
           <Link to="/dashboard" className="btn btn-secondary">
             &larr; Return to Dashboard
           </Link>
@@ -262,36 +260,34 @@ export const Phase2: React.FC = () => {
   return (
     <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Top Header Bar */}
-      <div style={{
+      <div className="glass-card" style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '1rem',
-        padding: '1rem 1.5rem',
-        backgroundColor: 'rgba(15, 23, 42, 0.8)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: 'var(--radius-lg)'
+        padding: '1.25rem 1.5rem'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: 'var(--radius-sm)',
-            background: 'var(--grad-purple)',
+            width: '40px',
+            height: '40px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--color-primary-light)',
+            border: '1px solid #BFDBFE',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <Code2 size={20} color="#FFFFFF" />
+            <Code2 size={22} color="var(--color-primary)" />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span className="badge badge-purple">PHASE 2</span>
-              <strong style={{ color: '#FFFFFF', fontSize: '1.05rem' }}>Python Debugging Challenge</strong>
+              <span className="badge badge-cyan">PHASE 2</span>
+              <strong style={{ color: 'var(--color-text)', fontSize: '1.1rem' }}>Python Debugging Challenge</strong>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Total Phase Deadline: 15 Minutes • Gemini AI Simulated Evaluation
+            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+              Total Phase Deadline: 15 Minutes • Gemini AI Evaluation
             </div>
           </div>
         </div>
@@ -310,20 +306,13 @@ export const Phase2: React.FC = () => {
 
       {/* Forced Closure Banner */}
       {(isClosed || phaseControl?.status === 'closed') && (
-        <div className="glass-card" style={{
-          padding: '1.25rem 1.5rem',
-          backgroundColor: 'rgba(239, 68, 68, 0.15)',
-          border: '1px solid var(--rose-400)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.85rem'
-        }}>
-          <Lock size={24} color="var(--rose-400)" style={{ flexShrink: 0 }} />
+        <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <Lock size={24} style={{ flexShrink: 0 }} />
           <div>
-            <h4 style={{ color: '#FFFFFF', margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'inherit' }}>
               Phase 2 Concluded & Submissions Locked
             </h4>
-            <p style={{ color: 'var(--rose-200)', margin: '0.2rem 0 0 0', fontSize: '0.85rem' }}>
+            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.875rem' }}>
               The event administrator has closed Phase 2. The phase timer is reset to 00:00, and all participant screens are locked.
             </p>
           </div>
@@ -332,10 +321,7 @@ export const Phase2: React.FC = () => {
 
       {/* Completion Banner */}
       {allSolved && (
-        <div className="glass-card" style={{
-          padding: '1.25rem 1.5rem',
-          backgroundColor: 'rgba(16, 185, 129, 0.15)',
-          border: '1px solid var(--emerald-400)',
+        <div className="alert alert-success" style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -343,12 +329,12 @@ export const Phase2: React.FC = () => {
           gap: '1rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Trophy size={28} color="var(--emerald-400)" />
+            <Trophy size={28} />
             <div>
-              <h4 style={{ color: '#FFFFFF', margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+              <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'inherit' }}>
                 All Phase 2 Programs Successfully Solved!
               </h4>
-              <p style={{ color: 'var(--emerald-200)', margin: '0.2rem 0 0 0', fontSize: '0.8rem' }}>
+              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem' }}>
                 Outstanding work! Your code has met all evaluation rubrics. Check the leaderboard and wait for Phase 3 finalists list.
               </p>
             </div>
@@ -361,22 +347,13 @@ export const Phase2: React.FC = () => {
 
       {/* Expiration Banner */}
       {isExpired && !allSolved && (
-        <div className="glass-card" style={{
-          padding: '1rem 1.5rem',
-          backgroundColor: 'rgba(239, 68, 68, 0.15)',
-          border: '1px solid var(--rose-400)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem'
-        }}>
-          <AlertTriangle size={20} color="var(--rose-400)" />
-          <span style={{ color: '#FFFFFF', fontSize: '0.875rem' }}>
-            The 15-minute deadline for Phase 2 has expired. Code execution is now concluded.
-          </span>
+        <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <AlertTriangle size={20} />
+          <span>The 15-minute deadline for Phase 2 has expired. Code execution is now concluded.</span>
         </div>
       )}
 
-      {/* Examination Paused Screen (Hides questions and editor) */}
+      {/* Examination Paused Screen */}
       {isPaused ? (
         <div className="glass-card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
           <div
@@ -384,28 +361,27 @@ export const Phase2: React.FC = () => {
               width: '68px',
               height: '68px',
               borderRadius: '50%',
-              backgroundColor: 'rgba(245, 158, 11, 0.15)',
-              border: '2px solid var(--amber-400)',
-              boxShadow: '0 0 30px rgba(245, 158, 11, 0.35)',
+              backgroundColor: '#FEF3C7',
+              border: '2px solid var(--color-warning)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 1.5rem auto'
             }}
           >
-            <Clock size={36} color="var(--amber-400)" />
+            <Clock size={36} color="var(--color-warning)" />
           </div>
           <span className="badge badge-amber" style={{ marginBottom: '0.75rem', fontSize: '0.8rem' }}>
             EXAMINATION PAUSED BY ADMINISTRATOR
           </span>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text)', marginBottom: '0.5rem' }}>
             Phase 2 Debugging & Timer Paused
           </h2>
-          <p style={{ color: 'var(--text-muted)', maxWidth: '520px', margin: '0 auto 1.5rem auto', lineHeight: 1.6, fontSize: '0.95rem' }}>
+          <p style={{ color: 'var(--color-text-secondary)', maxWidth: '520px', margin: '0 auto 1.5rem auto', lineHeight: 1.6, fontSize: '0.95rem' }}>
             The administrator has temporarily paused Phase 2. The challenge questions and editor are hidden and the phase timer has stopped. Your written code has been safely preserved. Please remain on this screen.
           </p>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--amber-400)', fontSize: '0.9rem', fontWeight: 600 }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--amber-400)', animation: 'pulse 1s infinite' }} />
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-warning)', fontSize: '0.9rem', fontWeight: 600 }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-warning)', animation: 'pulse 1s infinite' }} />
             Waiting for administrator to resume Phase 2...
           </div>
         </div>
@@ -427,18 +403,20 @@ export const Phase2: React.FC = () => {
                     gap: '0.5rem',
                     padding: '0.65rem 1.25rem',
                     borderRadius: 'var(--radius-md)',
-                    backgroundColor: isActive ? 'rgba(168, 85, 247, 0.15)' : 'rgba(15, 23, 42, 0.6)',
-                    border: isActive ? '1px solid var(--purple-400)' : '1px solid var(--border-subtle)',
-                    color: isActive ? '#FFFFFF' : 'var(--text-muted)',
+                    backgroundColor: isActive ? 'var(--color-primary-light)' : '#FFFFFF',
+                    border: isActive ? '1px solid #BFDBFE' : '1px solid var(--color-border)',
+                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                     cursor: 'pointer',
-                    fontFamily: 'var(--font-display)',
+                    fontFamily: 'var(--font-sans)',
                     fontWeight: 600,
-                    fontSize: '0.875rem'
+                    fontSize: '0.875rem',
+                    boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
+                    transition: 'all var(--transition-fast)'
                   }}
                 >
-                  <FileCode size={16} color={isSolved ? 'var(--emerald-400)' : isActive ? 'var(--purple-400)' : 'var(--text-dim)'} />
+                  <FileCode size={16} color={isSolved ? 'var(--color-success)' : isActive ? 'var(--color-primary)' : 'var(--color-disabled)'} />
                   <span>Program {idx + 1}: {q.title}</span>
-                  {isSolved && <CheckCircle2 size={16} color="var(--emerald-400)" />}
+                  {isSolved && <CheckCircle2 size={16} color="var(--color-success)" />}
                 </button>
               );
             })}
@@ -448,191 +426,201 @@ export const Phase2: React.FC = () => {
           {currentQ && (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'minmax(350px, 420px) 1fr',
+              gridTemplateColumns: 'minmax(340px, 420px) 1fr',
               gap: '1.25rem',
               alignItems: 'stretch'
-            }}>
-          {/* Left Column: Problem Description & Expected Behavior */}
-          <div className="glass-card" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', overflowY: 'auto', maxHeight: '720px' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <span className="badge badge-purple">{currentQ.difficulty?.toUpperCase()}</span>
-                <span className="badge badge-emerald">+{currentQ.scoring_points} PTS</span>
-              </div>
-              <h3 style={{ fontSize: '1.25rem', lineHeight: 1.4 }}>{currentQ.title}</h3>
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
-              <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: '0.4rem' }}>
-                Problem Statement & Bug Description
-              </div>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                {currentQ.problem_statement}
-              </div>
-            </div>
-
-            {/* Rubric / Instructions Hint */}
-            <div style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-md)',
-              padding: '1rem',
-              fontSize: '0.8rem',
-              color: 'var(--text-muted)',
-              lineHeight: 1.5
-            }}>
-              <strong style={{ color: 'var(--cyan-400)' }}>Evaluation Rules:</strong>
-              <ul style={{ paddingLeft: '1.2rem', marginTop: '0.4rem' }}>
-                <li>Code is evaluated mentally by Gemini AI against Python 3 semantics.</li>
-                <li>Simulated output is labeled clearly as AI-predicted output.</li>
-                <li>Ensure all syntax errors and edge cases are resolved.</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Right Column: Monaco Editor & Output Console */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Editor Container */}
-            <div className="glass-card" style={{ overflow: 'hidden', border: '1px solid var(--border-medium)' }}>
-              {/* Editor Header Bar */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.65rem 1rem',
-                backgroundColor: 'rgba(10, 15, 29, 0.95)',
-                borderBottom: '1px solid var(--border-subtle)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
-                  <Terminal size={14} color="var(--purple-400)" />
-                  <span>solution.py</span>
+            }} className="phase2-grid">
+              {/* Left Column: Problem Description */}
+              <div className="glass-card" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', overflowY: 'auto', maxHeight: '720px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span className="badge badge-purple">{currentQ.difficulty?.toUpperCase()}</span>
+                    <span className="badge badge-emerald">+{currentQ.scoring_points} PTS</span>
+                  </div>
+                  <h3 style={{ fontSize: '1.3rem', lineHeight: 1.4, color: 'var(--color-text)', fontWeight: 800 }}>{currentQ.title}</h3>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <button
-                    onClick={handleResetToStarter}
-                    disabled={isClosed || Boolean(phaseControl?.status === 'closed') || isCurrentSolved || isExpired}
-                    className="btn btn-secondary btn-sm"
-                    title="Reset to original faulty code"
-                  >
-                    <RotateCcw size={13} /> Reset
-                  </button>
+                <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 700, letterSpacing: '0.04em', marginBottom: '0.4rem' }}>
+                    Problem Statement & Bug Description
+                  </div>
+                  <div style={{ fontSize: '0.925rem', color: 'var(--color-text)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                    {currentQ.problem_statement}
+                  </div>
+                </div>
 
-                  <button
-                    onClick={handleRunEvaluation}
-                    disabled={isClosed || Boolean(phaseControl?.status === 'closed') || evaluating || isCurrentSolved || isExpired}
-                    className={`btn ${isCurrentSolved ? 'btn-success' : 'btn-accent'} btn-sm`}
-                    style={{ padding: '0.45rem 1rem' }}
-                  >
-                    {evaluating ? (
-                      <>
-                        <span className="spinner" style={{ width: '14px', height: '14px', border: '2px solid #FFF', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                        Simulating Python Execution...
-                      </>
-                    ) : isClosed || phaseControl?.status === 'closed' ? (
-                      <>
-                        <Lock size={14} /> Phase Closed & Locked
-                      </>
-                    ) : isCurrentSolved ? (
-                      <>
-                        <CheckCircle2 size={14} color="#FFFFFF" /> Program Solved (+{currentQ?.scoring_points} PTS)
-                      </>
-                    ) : isExpired ? (
-                      <>
-                        <Clock size={14} /> Phase Time Expired
-                      </>
-                    ) : (
-                      <>
-                        <Play size={14} fill="#FFFFFF" /> Run & AI Evaluate
-                      </>
-                    )}
-                  </button>
+                {/* Rubric / Instructions Hint */}
+                <div style={{
+                  backgroundColor: '#F8FAFC',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '1rem',
+                  fontSize: '0.825rem',
+                  color: 'var(--color-text-secondary)',
+                  lineHeight: 1.5,
+                  marginTop: 'auto'
+                }}>
+                  <strong style={{ color: 'var(--color-primary)' }}>Evaluation Rules:</strong>
+                  <ul style={{ paddingLeft: '1.2rem', marginTop: '0.4rem' }}>
+                    <li>Code is verified by the AI evaluation pipeline against Python 3 semantics.</li>
+                    <li>Ensure all syntax errors, edge cases, and unexpected exceptions are fixed.</li>
+                    <li>Green check indicates acceptance and scores awarded.</li>
+                  </ul>
                 </div>
               </div>
 
-              {/* Monaco Editor Instance */}
-              <div style={{ height: '380px' }}>
-                <Editor
-                  height="100%"
-                  defaultLanguage="python"
-                  language="python"
-                  theme="vs-dark"
-                  value={codeMap[currentQ.id] || ''}
-                  onChange={handleCodeChange}
-                  options={{
-                    readOnly: isClosed || Boolean(phaseControl?.status === 'closed') || isCurrentSolved || isExpired,
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    lineNumbers: 'on',
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                    tabSize: 4,
-                    insertSpaces: true,
-                    fontFamily: "'Fira Code', 'JetBrains Mono', Consolas, monospace"
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* AI Simulated Output Console */}
-            <div className="glass-card" style={{ padding: '1.25rem', backgroundColor: 'rgba(7, 11, 20, 0.95)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-dim)', fontWeight: 700 }}>
-                  <Cpu size={15} color="var(--purple-400)" />
-                  <span>Simulated Python Execution Console</span>
-                </div>
-                {currentEval && (
-                  <span className={`badge ${currentEval.accepted ? 'badge-emerald' : 'badge-rose'}`}>
-                    {currentEval.accepted ? 'ACCEPTED' : 'REJECTED'}
-                  </span>
-                )}
-              </div>
-
-              {currentEval ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {/* Predicted Output */}
+              {/* Right Column: Monaco Editor & Output Console */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Editor Container */}
+                <div className="glass-card" style={{ overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+                  {/* Editor Header Bar */}
                   <div style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    padding: '0.75rem 1rem',
-                    borderRadius: 'var(--radius-sm)',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.85rem',
-                    color: currentEval.accepted ? 'var(--emerald-400)' : '#FDA4AF',
-                    whiteSpace: 'pre-wrap',
-                    maxHeight: '160px',
-                    overflowY: 'auto',
-                    border: '1px solid var(--border-subtle)'
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.65rem 1rem',
+                    backgroundColor: '#F8FAFC',
+                    borderBottom: '1px solid var(--color-border)'
                   }}>
-                    {currentEval.predicted_output || 'No output produced'}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-text)' }}>
+                      <Terminal size={15} color="var(--color-primary)" />
+                      <span>solution.py</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <button
+                        onClick={handleResetToStarter}
+                        disabled={isClosed || Boolean(phaseControl?.status === 'closed') || isCurrentSolved || isExpired}
+                        className="btn btn-secondary btn-sm"
+                        title="Reset to original starter code"
+                      >
+                        <RotateCcw size={13} /> Reset Code
+                      </button>
+
+                      <button
+                        onClick={handleRunEvaluation}
+                        disabled={isClosed || Boolean(phaseControl?.status === 'closed') || evaluating || isCurrentSolved || isExpired}
+                        className={`btn ${isCurrentSolved ? 'btn-success' : 'btn-primary'} btn-sm`}
+                        style={{ padding: '0.45rem 1rem' }}
+                      >
+                        {evaluating ? (
+                          <>
+                            <span className="spinner" style={{ width: '14px', height: '14px', border: '2px solid #FFFFFF', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                            Evaluating Python Code...
+                          </>
+                        ) : isClosed || phaseControl?.status === 'closed' ? (
+                          <>
+                            <Lock size={14} /> Phase Closed & Locked
+                          </>
+                        ) : isCurrentSolved ? (
+                          <>
+                            <CheckCircle2 size={14} /> Program Solved (+{currentQ?.scoring_points} PTS)
+                          </>
+                        ) : isExpired ? (
+                          <>
+                            <Clock size={14} /> Phase Time Expired
+                          </>
+                        ) : (
+                          <>
+                            <Play size={14} /> Run & Evaluate
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Explanation & Issues */}
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    <strong>AI Analysis:</strong> {currentEval.explanation}
+                  {/* Monaco Editor Instance */}
+                  <div style={{ height: '380px' }}>
+                    <Editor
+                      height="100%"
+                      defaultLanguage="python"
+                      language="python"
+                      theme="vs"
+                      value={codeMap[currentQ.id] || ''}
+                      onChange={handleCodeChange}
+                      options={{
+                        readOnly: isClosed || Boolean(phaseControl?.status === 'closed') || isCurrentSolved || isExpired,
+                        minimap: { enabled: false },
+                        fontSize: 14,
+                        lineNumbers: 'on',
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true,
+                        tabSize: 4,
+                        insertSpaces: true,
+                        fontFamily: "'Fira Code', Consolas, monospace"
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* AI Simulated Output Console */}
+                <div className="glass-card" style={{ padding: '1.25rem', backgroundColor: '#FFFFFF' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--color-text-secondary)', fontWeight: 700 }}>
+                      <Cpu size={15} color="var(--color-primary)" />
+                      <span>Execution & Evaluation Console</span>
+                    </div>
+                    {currentEval && (
+                      <span className={`badge ${currentEval.accepted ? 'badge-emerald' : 'badge-rose'}`}>
+                        {currentEval.accepted ? 'ACCEPTED' : 'REJECTED'}
+                      </span>
+                    )}
                   </div>
 
-                  {currentEval.issues && currentEval.issues.length > 0 && (
-                    <div style={{ fontSize: '0.8rem', color: 'var(--rose-400)' }}>
-                      <strong>Identified Issues:</strong>
-                      <ul style={{ paddingLeft: '1.2rem', marginTop: '0.2rem' }}>
-                        {currentEval.issues.map((issue, i) => (
-                          <li key={i}>{issue}</li>
-                        ))}
-                      </ul>
+                  {currentEval ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {/* Predicted Output */}
+                      <div style={{
+                        backgroundColor: '#F8FAFC',
+                        padding: '0.75rem 1rem',
+                        borderRadius: 'var(--radius-sm)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.875rem',
+                        color: currentEval.accepted ? 'var(--color-success)' : 'var(--color-danger)',
+                        whiteSpace: 'pre-wrap',
+                        maxHeight: '160px',
+                        overflowY: 'auto',
+                        border: '1px solid var(--color-border)'
+                      }}>
+                        {currentEval.predicted_output || 'No output produced'}
+                      </div>
+
+                      {/* Explanation & Issues */}
+                      <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+                        <strong style={{ color: 'var(--color-text)' }}>AI Analysis:</strong> {currentEval.explanation}
+                      </div>
+
+                      {currentEval.issues && currentEval.issues.length > 0 && (
+                        <div style={{ fontSize: '0.825rem', color: 'var(--color-danger)' }}>
+                          <strong>Identified Issues:</strong>
+                          <ul style={{ paddingLeft: '1.2rem', marginTop: '0.2rem' }}>
+                            {currentEval.issues.map((issue, i) => (
+                              <li key={i}>{issue}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', fontStyle: 'italic', padding: '0.75rem 0' }}>
+                      Click "Run & Evaluate" to simulate execution of your Python code and view results.
                     </div>
                   )}
                 </div>
-              ) : (
-                <div style={{ color: 'var(--text-dim)', fontSize: '0.85rem', fontStyle: 'italic', padding: '1rem 0' }}>
-                  Click "Run & AI Evaluate" to simulate execution of your Python code through Gemini AI.
-                </div>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
-      </>
-      )}
+
+      {/* Responsive Grid Breakpoint Helper */}
+      <style>{`
+        @media (max-width: 960px) {
+          .phase2-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

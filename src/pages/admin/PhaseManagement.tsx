@@ -6,28 +6,20 @@ import { api } from '../../services/api';
 import { CountdownTimer } from '../../components/common/CountdownTimer';
 import type { PhaseControl, PhaseId, PhaseStatus, CompetitionSettings, QuestionSet } from '../../types';
 import {
-  Sliders,
   Play,
   Pause,
-  StopCircle,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Award,
   AlertTriangle,
   RotateCcw,
   Zap,
   Code2,
   Trophy,
   Lock,
-  X,
-  FileQuestion,
-  HelpCircle
+  X
 } from 'lucide-react';
 
 export const PhaseManagement: React.FC = () => {
   const [phases, setPhases] = useState<Record<PhaseId, PhaseControl> | null>(null);
-  const [settings, setSettings] = useState<CompetitionSettings | null>(null);
+  const [, setSettings] = useState<CompetitionSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingPhase, setSavingPhase] = useState<string | null>(null);
 
@@ -296,8 +288,8 @@ export const PhaseManagement: React.FC = () => {
   if (loading || !phases) {
     return (
       <div style={{ textAlign: 'center', padding: '5rem 0' }}>
-        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto', border: '3px solid rgba(0, 242, 254, 0.2)', borderTopColor: 'var(--cyan-400)', borderRadius: '50%' }} />
-        <p style={{ color: 'var(--text-muted)' }}>Loading Phase Lifecycle Matrix...</p>
+        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto' }} />
+        <p style={{ color: 'var(--color-text-secondary)' }}>Loading Phase Lifecycle Matrix...</p>
       </div>
     );
   }
@@ -308,11 +300,11 @@ export const PhaseManagement: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Header */}
       <div>
-        <div className="badge badge-purple" style={{ marginBottom: '0.4rem' }}>
+        <div className="badge badge-primary" style={{ marginBottom: '0.4rem' }}>
           Real-Time Governance
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Phase Lifecycle Management</h1>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>Phase Lifecycle Management</h1>
+        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
           Activate phases for the waiting room, start examinations, restart phases safely with dedicated question sets, and manage timers.
         </div>
       </div>
@@ -322,18 +314,8 @@ export const PhaseManagement: React.FC = () => {
         {phaseList.map((pId) => {
           const p = phases[pId];
           let icon = Zap;
-          let color = 'var(--cyan-400)';
-          let badgeClass = 'badge-cyan';
-
-          if (pId === 'phase2') {
-            icon = Code2;
-            color = 'var(--purple-400)';
-            badgeClass = 'badge-purple';
-          } else if (pId === 'phase3') {
-            icon = Trophy;
-            color = 'var(--rose-400)';
-            badgeClass = 'badge-rose';
-          }
+          if (pId === 'phase2') icon = Code2;
+          else if (pId === 'phase3') icon = Trophy;
 
           const IconComponent = icon;
           const isActivated = Boolean(p.is_activated || p.status === 'active');
@@ -341,45 +323,46 @@ export const PhaseManagement: React.FC = () => {
           const isClosed = p.status === 'closed';
 
           return (
-            <div key={pId} className="glass-card" style={{ padding: '2rem' }}>
+            <div key={pId} className="card" style={{ padding: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{
-                    width: '46px',
-                    height: '46px',
+                    width: '48px',
+                    height: '48px',
                     borderRadius: 'var(--radius-md)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    backgroundColor: 'var(--color-primary-light)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '1px solid var(--border-subtle)'
+                    border: '1px solid var(--color-border)',
+                    flexShrink: 0
                   }}>
-                    <IconComponent size={24} color={color} />
+                    <IconComponent size={24} color="var(--color-primary)" />
                   </div>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                      <span className={`badge ${badgeClass}`}>{pId.toUpperCase()}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                      <span className="badge badge-primary">{pId.toUpperCase()}</span>
                       <span className="badge badge-secondary" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                         RUN #{p.current_run_number || 1}
                       </span>
-                      <h2 style={{ fontSize: '1.4rem' }}>{p.title}</h2>
+                      <h2 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>{p.title}</h2>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
                         Phase State:{' '}
                         {isClosed ? (
-                          <strong style={{ color: 'var(--rose-400)' }}>CLOSED & LOCKED</strong>
+                          <strong style={{ color: 'var(--color-danger)' }}>CLOSED & LOCKED</strong>
                         ) : isExamLive ? (
-                          <strong style={{ color: 'var(--emerald-400)' }}>EXAM LIVE ({new Date(p.exam_started_at!).toLocaleTimeString()})</strong>
+                          <strong style={{ color: 'var(--color-success)' }}>EXAM LIVE ({new Date(p.exam_started_at!).toLocaleTimeString()})</strong>
                         ) : isActivated ? (
-                          <strong style={{ color: 'var(--amber-400)' }}>WAITING ROOM OPEN (EXAM NOT STARTED)</strong>
+                          <strong style={{ color: 'var(--color-warning)' }}>WAITING ROOM OPEN (EXAM NOT STARTED)</strong>
                         ) : (
-                          <strong style={{ color: 'var(--text-muted)' }}>INACTIVE / DRAFT</strong>
+                          <strong style={{ color: 'var(--color-text-secondary)' }}>INACTIVE / DRAFT</strong>
                         )}
                       </div>
 
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Phase Timer:</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', fontWeight: 600 }}>Phase Timer:</span>
                         <CountdownTimer
                           key={`admin-timer-${pId}-${p.status}-${p.exam_started_at}`}
                           durationSeconds={(p.total_deadline_minutes || (pId === 'phase1' ? 15 : 20)) * 60}
@@ -400,24 +383,30 @@ export const PhaseManagement: React.FC = () => {
                   <button
                     onClick={() => handleActivatePhase(pId)}
                     disabled={savingPhase === pId || isClosed}
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-secondary btn-sm"
                     style={{
-                      backgroundColor: isActivated && !isExamLive ? 'rgba(0, 242, 254, 0.15)' : undefined,
-                      borderColor: isActivated && !isExamLive ? 'var(--cyan-400)' : undefined
+                      backgroundColor: isActivated && !isExamLive ? 'var(--color-primary-light)' : undefined,
+                      borderColor: isActivated && !isExamLive ? 'var(--color-primary)' : undefined,
+                      color: isActivated && !isExamLive ? 'var(--color-primary)' : undefined,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem'
                     }}
                     title="Activate Phase: Opens Waiting Room for eligible participants. Does NOT start the exam."
                   >
-                    <Play size={14} fill="currentColor" /> {isActivated ? 'Activate Phase' : 'Activate Phase'}
+                    <Play size={14} fill="currentColor" /> {isActivated ? 'Phase Active' : 'Activate Phase'}
                   </button>
 
                   {/* Distinct Control 2: Start Exam */}
                   <button
                     onClick={() => handleOpenStartExam(pId)}
                     disabled={savingPhase === pId || isExamLive || !isActivated || isClosed}
-                    className="btn btn-success btn-sm"
+                    className="btn btn-primary btn-sm"
                     style={{
                       opacity: isExamLive ? 0.6 : 1,
-                      backgroundColor: isExamLive ? 'rgba(16, 185, 129, 0.2)' : undefined
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem'
                     }}
                     title={isExamLive ? `Exam started at ${new Date(p.exam_started_at!).toLocaleTimeString()}` : 'Start Exam: Authorizes waiting participants to enter the examination'}
                   >
@@ -428,11 +417,15 @@ export const PhaseManagement: React.FC = () => {
                   <button
                     onClick={() => handleOpenRestart(pId)}
                     disabled={savingPhase === pId}
-                    className="btn btn-warning btn-sm"
+                    className="btn btn-sm"
                     style={{
-                      backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                      borderColor: 'var(--amber-400)',
-                      color: 'var(--amber-400)'
+                      backgroundColor: '#FEF3C7',
+                      borderColor: 'var(--color-warning)',
+                      color: 'var(--color-warning)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      fontWeight: 600
                     }}
                     title="Start Again: Archive previous run, reset attempt counters for this phase, and create new run with a selected question set"
                   >
@@ -445,6 +438,7 @@ export const PhaseManagement: React.FC = () => {
                       onClick={() => handleUpdateStatus(pId, 'paused')}
                       disabled={savingPhase === pId}
                       className="btn btn-secondary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
                       <Pause size={14} fill="currentColor" /> Pause
                     </button>
@@ -454,11 +448,14 @@ export const PhaseManagement: React.FC = () => {
                     <button
                       onClick={() => handleUpdateStatus(pId, 'active')}
                       disabled={savingPhase === pId}
-                      className="btn btn-success btn-sm"
+                      className="btn btn-secondary btn-sm"
                       style={{
-                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                        borderColor: 'var(--emerald-400)',
-                        color: 'var(--emerald-400)'
+                        backgroundColor: '#DCFCE7',
+                        borderColor: 'var(--color-success)',
+                        color: 'var(--color-success)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
                       }}
                     >
                       <Play size={14} fill="currentColor" /> Resume
@@ -471,10 +468,10 @@ export const PhaseManagement: React.FC = () => {
                       disabled={savingPhase === pId}
                       className="btn btn-danger btn-sm"
                       style={{
-                        backgroundColor: '#DC2626',
-                        color: '#FFFFFF',
-                        fontWeight: 700,
-                        boxShadow: '0 0 10px rgba(220, 38, 38, 0.4)'
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        fontWeight: 600
                       }}
                       title="End Phase: Forcibly submits all active participant answers, permanently locks screens, and resets timers"
                     >
@@ -482,7 +479,7 @@ export const PhaseManagement: React.FC = () => {
                     </button>
                   ) : (
                     <span
-                      className="badge badge-rose"
+                      className="badge badge-danger"
                       style={{
                         padding: '0.45rem 0.85rem',
                         fontSize: '0.75rem',
@@ -509,8 +506,8 @@ export const PhaseManagement: React.FC = () => {
 
               {/* Configuration Inputs */}
               <div style={{
-                backgroundColor: 'rgba(0,0,0,0.25)',
-                border: '1px solid var(--border-subtle)',
+                backgroundColor: 'var(--color-surface-secondary)',
+                border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-md)',
                 padding: '1.5rem',
                 display: 'flex',
@@ -524,9 +521,9 @@ export const PhaseManagement: React.FC = () => {
                 }}>
                   {/* Default Question Timer */}
                   <div>
-                    <label className="form-label">
+                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>Default Question Timer</span>
-                      <span className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>Seconds</span>
+                      <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>Seconds</span>
                     </label>
                     <input
                       type="number"
@@ -545,9 +542,9 @@ export const PhaseManagement: React.FC = () => {
 
                   {/* Total Phase Deadline */}
                   <div>
-                    <label className="form-label">
+                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>Phase Total Deadline</span>
-                      <span className="badge badge-purple" style={{ fontSize: '0.65rem' }}>Minutes</span>
+                      <span className="badge badge-secondary" style={{ fontSize: '0.7rem' }}>Minutes</span>
                     </label>
                     <input
                       type="number"
@@ -566,9 +563,9 @@ export const PhaseManagement: React.FC = () => {
 
                   {/* Qualification Threshold */}
                   <div>
-                    <label className="form-label">
+                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>Qualification Limit</span>
-                      <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>Qualifiers</span>
+                      <span className="badge badge-secondary" style={{ fontSize: '0.7rem' }}>Qualifiers</span>
                     </label>
                     <input
                       type="number"
@@ -586,7 +583,7 @@ export const PhaseManagement: React.FC = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem', borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.75rem', borderTop: '1px solid var(--color-border)' }}>
                   <button
                     onClick={() => handleSaveConfig(pId)}
                     disabled={savingPhase === pId}
@@ -606,42 +603,44 @@ export const PhaseManagement: React.FC = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(15, 23, 42, 0.6)',
+          backdropFilter: 'blur(4px)',
           zIndex: 100,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '1.5rem'
         }}>
-          <div className="glass-card-glow" style={{ maxWidth: '540px', width: '100%', padding: '2rem' }}>
+          <div className="card" style={{ maxWidth: '540px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-modal)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Zap size={24} color="var(--emerald-400)" />
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0 }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Zap size={20} color="var(--color-primary)" />
+                </div>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>
                   Start Exam — {phases?.[startExamModal.phase]?.title}
                 </h3>
               </div>
               <button
                 onClick={() => setStartExamModal({ isOpen: false, phase: null, assignedSetName: '', reason: '' })}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
 
             <div style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              backgroundColor: '#EFF6FF',
+              border: '1px solid #BFDBFE',
               borderRadius: 'var(--radius-md)',
               padding: '1rem',
               marginBottom: '1.25rem',
               fontSize: '0.875rem'
             }}>
-              <p style={{ margin: 0, color: '#E2E8F0', lineHeight: 1.5 }}>
+              <p style={{ margin: 0, color: 'var(--color-text)', lineHeight: 1.5 }}>
                 You are about to officially <strong>Start the Examination</strong> for <strong>{phases?.[startExamModal.phase]?.title}</strong> (Run #{phases?.[startExamModal.phase]?.current_run_number || 1}).
               </p>
-              <ul style={{ margin: '0.75rem 0 0 1.25rem', padding: 0, color: 'var(--text-muted)' }}>
+              <ul style={{ margin: '0.75rem 0 0 1.25rem', padding: 0, color: 'var(--color-text-secondary)' }}>
                 <li>Eligible participants in the Waiting Room will immediately be authorized to enter the exam.</li>
                 <li>Question timers and phase deadlines will begin based on the authoritative server timestamp.</li>
                 <li>The Waiting Room status will update live for all connected participants.</li>
@@ -651,12 +650,12 @@ export const PhaseManagement: React.FC = () => {
             <div style={{ marginBottom: '1.25rem' }}>
               <label className="form-label">Assigned Question Set</label>
               <div style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid var(--border-subtle)',
+                backgroundColor: 'var(--color-surface-secondary)',
+                border: '1px solid var(--color-border)',
                 padding: '0.75rem 1rem',
                 borderRadius: 'var(--radius-sm)',
                 fontSize: '0.9rem',
-                color: 'var(--cyan-400)',
+                color: 'var(--color-primary)',
                 fontWeight: 600
               }}>
                 {startExamModal.assignedSetName}
@@ -684,7 +683,7 @@ export const PhaseManagement: React.FC = () => {
               </button>
               <button
                 onClick={handleConfirmStartExam}
-                className="btn btn-success"
+                className="btn btn-primary"
                 disabled={savingPhase === startExamModal.phase}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}
               >
@@ -700,25 +699,27 @@ export const PhaseManagement: React.FC = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.88)',
-          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(15, 23, 42, 0.6)',
+          backdropFilter: 'blur(4px)',
           zIndex: 100,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '1.5rem'
         }}>
-          <div className="glass-card-glow" style={{ maxWidth: '580px', width: '100%', padding: '2rem' }}>
+          <div className="card" style={{ maxWidth: '580px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-modal)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <RotateCcw size={24} color="var(--amber-400)" />
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0 }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <RotateCcw size={20} color="var(--color-warning)" />
+                </div>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>
                   Start Again — {phases?.[restartModal.phase]?.title}
                 </h3>
               </div>
               <button
                 onClick={() => setRestartModal({ isOpen: false, phase: null, questionSets: [], selectedSetId: '', reason: '', loadingSets: false })}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
@@ -726,21 +727,21 @@ export const PhaseManagement: React.FC = () => {
 
             {/* Warning Box */}
             <div style={{
-              backgroundColor: 'rgba(244, 63, 94, 0.12)',
-              border: '1px solid rgba(244, 63, 94, 0.35)',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
               borderRadius: 'var(--radius-md)',
               padding: '1.25rem',
               marginBottom: '1.25rem',
               fontSize: '0.875rem'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rose-400)', fontWeight: 700, marginBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-danger)', fontWeight: 700, marginBottom: '0.5rem' }}>
                 <AlertTriangle size={18} />
                 DESTRUCTIVE ADMINISTRATIVE ACTION WARNING
               </div>
-              <p style={{ margin: 0, color: '#E2E8F0', lineHeight: 1.5 }}>
+              <p style={{ margin: 0, color: 'var(--color-text)', lineHeight: 1.5 }}>
                 Starting again will <strong>reset the active state</strong> for <strong>{phases?.[restartModal.phase]?.title}</strong>:
               </p>
-              <ul style={{ margin: '0.5rem 0 0 1.25rem', padding: 0, color: 'var(--text-muted)' }}>
+              <ul style={{ margin: '0.5rem 0 0 1.25rem', padding: 0, color: 'var(--color-text-secondary)' }}>
                 <li>A new run (Run #{(phases?.[restartModal.phase]?.current_run_number || 1) + 1}) will be initiated.</li>
                 <li>Previous run data will be <strong>archived and preserved</strong> for administrative audit.</li>
                 <li>Participant active attempts, timer states, and answers for this phase will be cleared.</li>
@@ -753,18 +754,18 @@ export const PhaseManagement: React.FC = () => {
             <div style={{ marginBottom: '1.25rem' }}>
               <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Select Question Set for the New Run</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Must belong to {restartModal.phase.toUpperCase()}</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Must belong to {restartModal.phase.toUpperCase()}</span>
               </label>
 
               {restartModal.loadingSets ? (
-                <div style={{ padding: '0.75rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading question sets...</div>
+                <div style={{ padding: '0.75rem', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>Loading question sets...</div>
               ) : restartModal.questionSets.length === 0 ? (
                 <div style={{
                   padding: '1rem',
-                  backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  backgroundColor: '#FFFBEB',
+                  border: '1px solid #FDE68A',
                   borderRadius: 'var(--radius-sm)',
-                  color: 'var(--amber-400)',
+                  color: 'var(--color-warning)',
                   fontSize: '0.85rem'
                 }}>
                   ⚠️ No available question sets found for this phase. Please create and publish a question set first in Question Set Management.
@@ -813,9 +814,7 @@ export const PhaseManagement: React.FC = () => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  fontWeight: 700,
-                  backgroundColor: '#D97706',
-                  color: '#FFFFFF'
+                  fontWeight: 700
                 }}
               >
                 <RotateCcw size={16} /> Confirm & Start Again

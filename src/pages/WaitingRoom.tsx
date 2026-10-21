@@ -11,11 +11,9 @@ import {
   Zap,
   Code2,
   Trophy,
-  ArrowRight,
   AlertTriangle,
   CheckCircle2,
   Lock,
-  Layers,
   Users,
   ShieldCheck,
   RefreshCw,
@@ -139,49 +137,44 @@ export const WaitingRoom: React.FC = () => {
       case 'phase1':
         return {
           title: 'Phase 1: Quick Quiz',
-          icon: <Zap size={24} color="var(--cyan-400)" />,
-          color: 'var(--cyan-400)',
+          icon: <Zap size={24} color="var(--color-primary)" />,
           examRoute: '/phase1',
           rules: [
-            '20 Python fundamental MCQs with rapid pacing.',
-            'Strict 15 seconds per question with authoritative server timestamp.',
-            'Single attempt only. Questions auto-submit when the per-question timer expires.',
-            'Top 15 scoring participants will qualify for Phase 2.'
+            '20 multiple-choice questions assessing Python foundations, syntax nuances, data structures, and operators.',
+            'Each question has a strict 15-second countdown timer. If unselected, 0 points are assigned.',
+            'Top 15 participants on the live leaderboard will qualify for Phase 2.'
           ]
         };
       case 'phase2':
         return {
-          title: 'Phase 2: Python Debugging',
-          icon: <Code2 size={24} color="var(--purple-400)" />,
-          color: 'var(--purple-400)',
+          title: 'Phase 2: Code Debugging Challenge',
+          icon: <Code2 size={24} color="var(--color-primary)" />,
           examRoute: '/phase2',
           rules: [
-            '3 buggy Python programs requiring debugging inside Monaco Editor.',
-            'Authoritative 15-minute overall phase timer.',
-            'Real-time automated evaluation powered by Gemini AI with AST validation.',
-            'Top 5 scoring participants will advance to the Grand Finals (Phase 3).'
+            'Inspect and fix broken starter code snippets inside the Monaco Editor.',
+            '15-minute global deadline for the entire phase.',
+            'AI-automated grading evaluates correctness and test coverage.',
+            'Top 5 participants qualify for the Grand Finals in Phase 3.'
           ]
         };
       case 'phase3':
         return {
-          title: 'Phase 3: Python Logic Finals',
-          icon: <Trophy size={24} color="var(--amber-400)" />,
-          color: 'var(--amber-400)',
+          title: 'Phase 3: Logic Builder (Finals)',
+          icon: <Trophy size={24} color="var(--color-warning)" />,
           examRoute: '/phase3',
           rules: [
-            '3 advanced algorithmic problems. You may switch between them freely.',
-            'CRITICAL: Exactly 3 Run / Submit attempts allowed per problem before permanent lock.',
-            'First finalist to solve all 3 programs is crowned Tech Expert 2K26 WINNER.',
-            'Second finalist to solve all 3 is crowned RUNNER-UP.'
+            '3 complex logic implementation problems. You may solve them in any order.',
+            'Strict constraint: You have exactly 3 Run attempts per program.',
+            'If 3 attempts fail, the problem becomes permanently locked.',
+            'The first finalist to correctly solve all programs wins the championship.'
           ]
         };
       default:
         return {
-          title: 'Competition Phase',
-          icon: <Layers size={24} color="var(--cyan-400)" />,
-          color: 'var(--cyan-400)',
+          title: 'Competition Waiting Room',
+          icon: <Zap size={24} color="var(--color-primary)" />,
           examRoute: '/dashboard',
-          rules: []
+          rules: ['Follow instructions provided by the event organizers.']
         };
     }
   };
@@ -194,18 +187,18 @@ export const WaitingRoom: React.FC = () => {
         <div
           className="spinner"
           style={{
-            width: '44px',
-            height: '44px',
-            margin: '0 auto 1.5rem auto',
-            border: '3px solid rgba(0, 242, 254, 0.2)',
-            borderTopColor: 'var(--cyan-400)',
+            width: '40px',
+            height: '40px',
+            margin: '0 auto 1.25rem auto',
+            border: '3px solid var(--color-primary-light)',
+            borderTopColor: 'var(--color-primary)',
             borderRadius: '50%'
           }}
         />
-        <h3 style={{ fontSize: '1.25rem', color: '#FFFFFF', marginBottom: '0.5rem' }}>
+        <h3 style={{ fontSize: '1.25rem', color: 'var(--color-text)', marginBottom: '0.5rem' }}>
           Connecting to Waiting Room...
         </h3>
-        <p style={{ color: 'var(--text-muted)' }}>
+        <p style={{ color: 'var(--color-text-secondary)' }}>
           Verifying participant eligibility and phase activation status.
         </p>
       </div>
@@ -227,7 +220,7 @@ export const WaitingRoom: React.FC = () => {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.5rem',
-            color: 'var(--text-muted)',
+            color: 'var(--color-text-secondary)',
             textDecoration: 'none',
             fontSize: '0.9rem',
             fontWeight: 500
@@ -236,23 +229,23 @@ export const WaitingRoom: React.FC = () => {
           <ChevronLeft size={16} /> Back to Dashboard
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.825rem', color: 'var(--color-text-secondary)' }}>
           <span
             style={{
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              backgroundColor: polling ? 'var(--cyan-400)' : 'var(--emerald-400)',
-              boxShadow: polling ? '0 0 8px var(--cyan-400)' : '0 0 8px var(--emerald-400)',
+              backgroundColor: polling ? 'var(--color-primary)' : 'var(--color-success)',
+              boxShadow: polling ? '0 0 6px var(--color-primary)' : '0 0 6px var(--color-success)',
               transition: 'all 0.3s'
             }}
           />
-          <span>Live Sync Active • Last checked: {lastChecked.toLocaleTimeString()}</span>
+          <span>Live Sync Active • Last updated: {lastChecked.toLocaleTimeString()}</span>
         </div>
       </div>
 
       {/* Main Waiting Room Hero Card */}
-      <div className="glass-card-glow" style={{ padding: '2.5rem', position: 'relative', overflow: 'hidden' }}>
+      <div className="glass-card" style={{ padding: '2.5rem', position: 'relative', overflow: 'hidden' }}>
         {/* Run Badge */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -261,8 +254,8 @@ export const WaitingRoom: React.FC = () => {
                 width: '52px',
                 height: '52px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(0, 242, 254, 0.1)',
-                border: '1px solid rgba(0, 242, 254, 0.25)',
+                backgroundColor: 'var(--color-primary-light)',
+                border: '1px solid #BFDBFE',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -275,11 +268,11 @@ export const WaitingRoom: React.FC = () => {
                 <span className="badge badge-cyan" style={{ fontSize: '0.75rem' }}>
                   RUN #{phaseControl?.current_run_number || 1}
                 </span>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
                   Tech Expert 2K26 • SVCE
                 </span>
               </div>
-              <h1 style={{ fontSize: '2rem', fontWeight: 800, marginTop: '0.25rem', color: '#FFFFFF' }}>
+              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, marginTop: '0.25rem', color: 'var(--color-text)' }}>
                 {meta.title}
               </h1>
             </div>
@@ -298,8 +291,7 @@ export const WaitingRoom: React.FC = () => {
                     width: '8px',
                     height: '8px',
                     borderRadius: '50%',
-                    backgroundColor: 'var(--emerald-400)',
-                    boxShadow: '0 0 10px var(--emerald-400)',
+                    backgroundColor: 'var(--color-success)',
                     animation: 'pulse 1.5s infinite'
                   }}
                 />
@@ -311,7 +303,7 @@ export const WaitingRoom: React.FC = () => {
                 WAITING ROOM OPEN (EXAM NOT STARTED)
               </span>
             ) : (
-              <span className="badge badge-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+              <span className="badge badge-cyan" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
                 PHASE LOCKED
               </span>
             )}
@@ -325,8 +317,8 @@ export const WaitingRoom: React.FC = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.75rem',
-              backgroundColor: 'rgba(0, 242, 254, 0.08)',
-              border: '1px solid rgba(0, 242, 254, 0.3)',
+              backgroundColor: 'var(--color-primary-light)',
+              border: '1px solid #BFDBFE',
               padding: '0.65rem 1.25rem',
               borderRadius: 'var(--radius-md)'
             }}
@@ -336,22 +328,22 @@ export const WaitingRoom: React.FC = () => {
                 width: '36px',
                 height: '36px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(0, 242, 254, 0.15)',
+                backgroundColor: '#FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
-              <Users size={18} color="var(--cyan-400)" />
+              <Users size={18} color="var(--color-primary)" />
             </div>
             <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                 Participants in Waiting Room
               </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span>{waitingCount}</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--emerald-400)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--emerald-400)' }} /> Joined
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-success)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-success)' }} /> Joined
                 </span>
               </div>
             </div>
@@ -363,18 +355,18 @@ export const WaitingRoom: React.FC = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.75rem',
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid var(--color-border)',
                 padding: '0.65rem 1.25rem',
                 borderRadius: 'var(--radius-md)'
               }}
             >
-              <ShieldCheck size={20} color="var(--cyan-400)" />
+              <ShieldCheck size={20} color="var(--color-primary)" />
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                   Assigned Question Set
                 </div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#FFFFFF' }}>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)' }}>
                   {assignedSet.set_name || assignedSet.name}
                 </div>
               </div>
@@ -385,151 +377,103 @@ export const WaitingRoom: React.FC = () => {
         {/* Dynamic Status Notification Box */}
         {isDisqualified ? (
           <div
-            style={{
-              backgroundColor: 'rgba(244, 63, 94, 0.12)',
-              border: '1px solid rgba(244, 63, 94, 0.35)',
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '1rem',
-              marginBottom: '1.75rem'
-            }}
+            className="alert alert-danger"
+            style={{ padding: '1.25rem', marginBottom: '1.75rem' }}
           >
-            <AlertTriangle size={24} color="var(--rose-400)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <AlertTriangle size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <h4 style={{ color: 'var(--rose-400)', fontWeight: 700, marginBottom: '0.35rem' }}>
+              <h4 style={{ fontWeight: 700, marginBottom: '0.35rem', color: 'inherit' }}>
                 Account Disqualified / Revoked
               </h4>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+              <p style={{ margin: 0, fontSize: '0.9rem' }}>
                 Your participation account has been suspended or disqualified by the competition administrators. You are not authorized to participate in this phase.
               </p>
             </div>
           </div>
         ) : isIneligible ? (
           <div
-            style={{
-              backgroundColor: 'rgba(244, 63, 94, 0.12)',
-              border: '1px solid rgba(244, 63, 94, 0.35)',
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '1rem',
-              marginBottom: '1.75rem'
-            }}
+            className="alert alert-danger"
+            style={{ padding: '1.25rem', marginBottom: '1.75rem' }}
           >
-            <AlertTriangle size={24} color="var(--rose-400)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <AlertTriangle size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <h4 style={{ color: 'var(--rose-400)', fontWeight: 700, marginBottom: '0.35rem' }}>
+              <h4 style={{ fontWeight: 700, marginBottom: '0.35rem', color: 'inherit' }}>
                 Not Qualified for {meta.title}
               </h4>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+              <p style={{ margin: 0, fontSize: '0.9rem' }}>
                 You did not meet the advancement criteria from the previous phase. Thank you for participating in Tech Expert 2K26!
               </p>
             </div>
           </div>
         ) : isNotPublished ? (
           <div
-            style={{
-              backgroundColor: 'rgba(245, 158, 11, 0.12)',
-              border: '1px solid rgba(245, 158, 11, 0.35)',
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '1rem',
-              marginBottom: '1.75rem'
-            }}
+            className="alert alert-warning"
+            style={{ padding: '1.25rem', marginBottom: '1.75rem' }}
           >
-            <Info size={24} color="var(--amber-400)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <Info size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <h4 style={{ color: 'var(--amber-400)', fontWeight: 700, marginBottom: '0.35rem' }}>
+              <h4 style={{ fontWeight: 700, marginBottom: '0.35rem', color: 'inherit' }}>
                 Advancement Results Pending
               </h4>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+              <p style={{ margin: 0, fontSize: '0.9rem' }}>
                 The event administrators have not yet finalized and published the list of participants advancing to {meta.title}. Please check back shortly.
               </p>
             </div>
           </div>
         ) : isClosed ? (
           <div
-            style={{
-              backgroundColor: 'rgba(244, 63, 94, 0.12)',
-              border: '1px solid rgba(244, 63, 94, 0.35)',
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '1rem',
-              marginBottom: '1.75rem'
-            }}
+            className="alert alert-danger"
+            style={{ padding: '1.25rem', marginBottom: '1.75rem' }}
           >
-            <Lock size={24} color="var(--rose-400)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <Lock size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <h4 style={{ color: 'var(--rose-400)', fontWeight: 700, marginBottom: '0.35rem' }}>
+              <h4 style={{ fontWeight: 700, marginBottom: '0.35rem', color: 'inherit' }}>
                 Phase Concluded
               </h4>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+              <p style={{ margin: 0, fontSize: '0.9rem' }}>
                 This phase has ended and all active sessions are locked. Check the official leaderboard for rankings.
               </p>
             </div>
           </div>
         ) : isExamLive ? (
           <div
-            style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '1rem',
-              marginBottom: '1.75rem'
-            }}
+            className="alert alert-success"
+            style={{ padding: '1.25rem', marginBottom: '1.75rem' }}
           >
-            <CheckCircle2 size={24} color="var(--emerald-400)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <CheckCircle2 size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <h4 style={{ color: 'var(--emerald-400)', fontWeight: 700, marginBottom: '0.35rem' }}>
+              <h4 style={{ fontWeight: 700, marginBottom: '0.35rem', color: 'inherit' }}>
                 Examination Has Officially Started!
               </h4>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.925rem', margin: 0, lineHeight: 1.5 }}>
-                The organizer has pressed <strong>Start Exam</strong>. Authorized participants may now enter the examination. Click the button below to start your exam session.
+              <p style={{ margin: 0, fontSize: '0.925rem', lineHeight: 1.5 }}>
+                The organizer has pressed <strong>Start Exam</strong>. All participants are entering together. Synchronizing session...
               </p>
             </div>
           </div>
         ) : isActivated ? (
           <div
-            style={{
-              backgroundColor: 'rgba(0, 242, 254, 0.08)',
-              border: '1px solid rgba(0, 242, 254, 0.25)',
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '1rem',
-              marginBottom: '1.75rem'
-            }}
+            className="alert alert-info"
+            style={{ padding: '1.25rem', marginBottom: '1.75rem' }}
           >
-            <Clock size={24} color="var(--cyan-400)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <Clock size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <h4 style={{ color: 'var(--cyan-400)', fontWeight: 700, marginBottom: '0.35rem' }}>
+              <h4 style={{ fontWeight: 700, marginBottom: '0.35rem', color: 'inherit' }}>
                 Waiting for Organizer to Start Exam
               </h4>
-              <p style={{ color: '#E2E8F0', fontSize: '0.95rem', margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
+              <p style={{ fontSize: '0.925rem', margin: 0, lineHeight: 1.6 }}>
                 The administrator has activated this phase. Please wait until the exam officially starts. Keep this page open.
               </p>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                This page will automatically unlock the exam button as soon as the administrator launches the exam. You will not lose your place.
+              <div style={{ fontSize: '0.85rem', marginTop: '0.5rem', opacity: 0.9 }}>
+                This page will automatically start a 3-second countdown and launch your exam as soon as the administrator begins the test.
               </div>
             </div>
           </div>
         ) : (
           <div
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              padding: '1.5rem',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid var(--color-border)',
+              padding: '1.25rem',
               borderRadius: 'var(--radius-md)',
               display: 'flex',
               alignItems: 'flex-start',
@@ -537,19 +481,19 @@ export const WaitingRoom: React.FC = () => {
               marginBottom: '1.75rem'
             }}
           >
-            <Lock size={24} color="var(--text-muted)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <Lock size={24} color="var(--color-text-secondary)" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <h4 style={{ color: '#FFFFFF', fontWeight: 700, marginBottom: '0.35rem' }}>
+              <h4 style={{ color: 'var(--color-text)', fontWeight: 700, marginBottom: '0.35rem' }}>
                 Phase Not Yet Activated
               </h4>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
                 The administrator has not activated this phase yet. Please wait for the announcement.
               </p>
             </div>
           </div>
         )}
 
-        {/* Waiting Room Real-time Live Guidance (No Enter Exam button) */}
+        {/* Waiting Room Real-time Live Guidance */}
         <div
           style={{
             display: 'flex',
@@ -557,24 +501,24 @@ export const WaitingRoom: React.FC = () => {
             justifyContent: 'space-between',
             gap: '1.25rem',
             flexWrap: 'wrap',
-            backgroundColor: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            backgroundColor: '#F8FAFC',
+            border: '1px solid var(--color-border)',
             padding: '1.25rem 1.5rem',
             borderRadius: 'var(--radius-md)'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
             {countdown !== null ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--cyan-400)', fontWeight: 700 }}>
-                <div className="spinner" style={{ width: '20px', height: '20px', border: '2px solid rgba(0, 242, 254, 0.2)', borderTopColor: 'var(--cyan-400)', borderRadius: '50%' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--color-primary)', fontWeight: 700 }}>
+                <div className="spinner" style={{ width: '20px', height: '20px', border: '2px solid var(--color-primary-light)', borderTopColor: 'var(--color-primary)', borderRadius: '50%' }} />
                 <span>Synchronizing exam start in {countdown}s... Entering automatically!</span>
               </div>
             ) : isClosed ? (
-              <span style={{ color: 'var(--rose-400)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: 'var(--color-danger)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Lock size={16} /> Phase is concluded and locked.
               </span>
             ) : isDisqualified || isIneligible ? (
-              <span style={{ color: 'var(--rose-400)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: 'var(--color-danger)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 <AlertTriangle size={16} /> You are not authorized for this phase.
               </span>
             ) : isExamLive ? (
@@ -584,12 +528,11 @@ export const WaitingRoom: React.FC = () => {
                     width: '10px',
                     height: '10px',
                     borderRadius: '50%',
-                    backgroundColor: 'var(--emerald-400)',
-                    boxShadow: '0 0 10px var(--emerald-400)',
+                    backgroundColor: 'var(--color-success)',
                     animation: 'pulse 1s infinite'
                   }}
                 />
-                <span style={{ color: 'var(--emerald-400)', fontWeight: 700, fontSize: '0.95rem' }}>
+                <span style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: '0.95rem' }}>
                   Exam launched by administrator! Transitioning all participants automatically...
                 </span>
               </div>
@@ -600,12 +543,11 @@ export const WaitingRoom: React.FC = () => {
                     width: '10px',
                     height: '10px',
                     borderRadius: '50%',
-                    backgroundColor: 'var(--cyan-400)',
-                    boxShadow: '0 0 10px var(--cyan-400)',
+                    backgroundColor: 'var(--color-primary)',
                     animation: 'pulse 1.5s infinite'
                   }}
                 />
-                <span style={{ color: '#E2E8F0', fontSize: '0.95rem', fontWeight: 500 }}>
+                <span style={{ color: 'var(--color-text)', fontSize: '0.925rem', fontWeight: 500 }}>
                   Standing by in Waiting Room. As soon as the administrator clicks <strong>Start Exam</strong>, a 3-second countdown will start and launch your exam automatically.
                 </span>
               </div>
@@ -615,7 +557,7 @@ export const WaitingRoom: React.FC = () => {
           <button
             onClick={() => checkPhaseStatus(true)}
             className="btn btn-secondary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.25rem' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.25rem' }}
           >
             <RefreshCw size={16} className={polling ? 'spinner' : ''} /> Sync Status
           </button>
@@ -624,27 +566,27 @@ export const WaitingRoom: React.FC = () => {
 
       {/* Phase Rules & Instructions */}
       <div className="glass-card" style={{ padding: '2rem' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem', color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <ShieldCheck size={20} color="var(--cyan-400)" />
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <ShieldCheck size={20} color="var(--color-primary)" />
           Phase Guidelines & Rules
         </h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {meta.rules.map((rule, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.925rem', color: 'var(--text-muted)' }}>
+            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', fontSize: '0.925rem', color: 'var(--color-text-secondary)' }}>
               <div
                 style={{
-                  width: '20px',
-                  height: '20px',
+                  width: '22px',
+                  height: '22px',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(0, 242, 254, 0.1)',
-                  color: 'var(--cyan-400)',
+                  backgroundColor: 'var(--color-primary-light)',
+                  color: 'var(--color-primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.75rem',
                   fontWeight: 700,
                   flexShrink: 0,
-                  marginTop: '2px'
+                  marginTop: '1px'
                 }}
               >
                 {idx + 1}
@@ -655,16 +597,16 @@ export const WaitingRoom: React.FC = () => {
         </div>
       </div>
 
-      {/* Run-Specific Phase Leaderboard (Only when enabled by Administrator) */}
+      {/* Run-Specific Phase Leaderboard */}
       {settings?.leaderboard_visible && (
         <div className="glass-card" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
             <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <Trophy size={20} color="var(--amber-400)" />
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <Trophy size={20} color="var(--color-warning)" />
                 {meta.title} — Live Standings (Run #{phaseControl?.current_run_number || 1})
               </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
                 Official participant scores for the current active run.
               </p>
             </div>
@@ -674,18 +616,18 @@ export const WaitingRoom: React.FC = () => {
           </div>
 
           {leaderboard.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
-              <Users size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.75rem auto', opacity: 0.5 }} />
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--color-text-secondary)' }}>
+              <Users size={36} color="var(--color-disabled)" style={{ margin: '0 auto 0.75rem auto' }} />
               <p style={{ fontSize: '0.95rem', margin: 0 }}>
                 No participant submissions recorded for Run #{phaseControl?.current_run_number || 1} yet.
               </p>
-              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.825rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
                 Scores will populate live as participants complete their attempts.
               </p>
             </div>
           ) : (
-            <div className="table-responsive">
-              <table className="table" style={{ width: '100%' }}>
+            <div className="custom-table-container">
+              <table className="custom-table" style={{ width: '100%' }}>
                 <thead>
                   <tr>
                     <th style={{ width: '70px', textAlign: 'center' }}>Rank</th>
@@ -701,14 +643,14 @@ export const WaitingRoom: React.FC = () => {
                     <tr
                       key={entry.user_id}
                       style={{
-                        backgroundColor: entry.user_id === user?.id ? 'rgba(0, 242, 254, 0.07)' : undefined
+                        backgroundColor: entry.user_id === user?.id ? 'var(--color-primary-light)' : undefined
                       }}
                     >
                       <td style={{ textAlign: 'center', fontWeight: 700 }}>
                         {entry.rank === 1 ? '🥇 1' : entry.rank === 2 ? '🥈 2' : entry.rank === 3 ? '🥉 3' : `#${entry.rank}`}
                       </td>
                       <td>
-                        <div style={{ fontWeight: 600, color: '#FFFFFF' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>
                           {entry.full_name}
                           {entry.user_id === user?.id && (
                             <span className="badge badge-cyan" style={{ marginLeft: '0.5rem', fontSize: '0.7rem' }}>
@@ -716,14 +658,14 @@ export const WaitingRoom: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{entry.email}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>{entry.email}</div>
                       </td>
                       <td>Section {entry.section}</td>
                       <td>Year {entry.academic_year}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--cyan-400)', fontSize: '1.05rem' }}>
+                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--color-primary)', fontSize: '1.05rem' }}>
                         {entry.score} pts
                       </td>
-                      <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      <td style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
                         {entry.detail || '—'}
                       </td>
                     </tr>
@@ -742,8 +684,8 @@ export const WaitingRoom: React.FC = () => {
             position: 'fixed',
             inset: 0,
             zIndex: 9999,
-            backgroundColor: 'rgba(5, 7, 15, 0.92)',
-            backdropFilter: 'blur(20px)',
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -754,50 +696,59 @@ export const WaitingRoom: React.FC = () => {
         >
           <div
             style={{
-              width: '100px',
-              height: '100px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(0, 242, 254, 0.12)',
-              border: '2px solid var(--cyan-400)',
-              boxShadow: '0 0 40px rgba(0, 242, 254, 0.45)',
+              backgroundColor: '#FFFFFF',
+              borderRadius: 'var(--radius-xl)',
+              padding: '3rem',
+              maxWidth: '520px',
+              width: '100%',
+              boxShadow: 'var(--shadow-modal)',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '1.5rem',
-              animation: 'pulse 1s infinite'
+              flexDirection: 'column',
+              alignItems: 'center'
             }}
           >
-            <Zap size={48} color="var(--cyan-400)" />
+            <div
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--color-primary-light)',
+                border: '2px solid var(--color-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1.25rem'
+              }}
+            >
+              <Zap size={36} color="var(--color-primary)" />
+            </div>
+
+            <span className="badge badge-cyan" style={{ fontSize: '0.8rem', padding: '0.35rem 0.85rem', marginBottom: '0.75rem' }}>
+              EXAM STARTING NOW
+            </span>
+
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--color-text)', marginBottom: '0.25rem' }}>
+              {meta.title} Starts In
+            </h2>
+
+            <div
+              key={countdown}
+              style={{
+                fontSize: '5.5rem',
+                fontWeight: 900,
+                fontFamily: 'var(--font-mono)',
+                lineHeight: 1,
+                margin: '1rem 0',
+                color: 'var(--color-primary)'
+              }}
+            >
+              {countdown === 0 ? 'GO!' : countdown}
+            </div>
+
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem', margin: 0, lineHeight: 1.5 }}>
+              All participants enter together. Questions and timers are synchronized across all screens.
+            </p>
           </div>
-
-          <span className="badge badge-cyan" style={{ fontSize: '0.85rem', padding: '0.4rem 1rem', marginBottom: '1rem', letterSpacing: '0.1em' }}>
-            ORGANIZER HAS STARTED THE EXAM
-          </span>
-
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.5rem' }}>
-            {meta.title} Starts In
-          </h2>
-
-          <div
-            key={countdown}
-            style={{
-              fontSize: '6.5rem',
-              fontWeight: 900,
-              fontFamily: 'var(--font-mono)',
-              lineHeight: 1,
-              margin: '1.25rem 0',
-              background: 'linear-gradient(135deg, var(--cyan-400) 0%, var(--purple-400) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 50px rgba(0, 242, 254, 0.6)'
-            }}
-          >
-            {countdown === 0 ? 'START!' : countdown}
-          </div>
-
-          <p style={{ color: '#E2E8F0', fontSize: '1.1rem', maxWidth: '480px', marginTop: '0.5rem', fontWeight: 500 }}>
-            All participants are entering together. Questions and timers are synchronized across all screens.
-          </p>
         </div>
       )}
     </div>

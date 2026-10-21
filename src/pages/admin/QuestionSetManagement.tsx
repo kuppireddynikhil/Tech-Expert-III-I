@@ -5,19 +5,17 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import type { QuestionSet, Question, QuestionSetAssignment, PhaseId, SectionType, AcademicYearType } from '../../types';
 import {
-  Layers,
   Plus,
-  Edit2,
   Trash2,
-  Users,
-  Share2
+  Share2,
+  X
 } from 'lucide-react';
 
 export const QuestionSetManagement: React.FC = () => {
   const [sets, setSets] = useState<QuestionSet[]>([]);
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [assignments, setAssignments] = useState<QuestionSetAssignment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   // Modal States
   const [assignModalSet, setAssignModalSet] = useState<QuestionSet | null>(null);
@@ -162,20 +160,20 @@ export const QuestionSetManagement: React.FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <div className="badge badge-purple" style={{ marginBottom: '0.4rem' }}>
+          <div className="badge badge-primary" style={{ marginBottom: '0.4rem' }}>
             Multi-Set Governance
           </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Question Set Management</h1>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>Question Set Management</h1>
+          <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
             Assemble question sets, reorder items, assign default timers, and release to Sections A–E or Years I–III.
           </div>
         </div>
       </div>
 
       {/* Create New Set Form Card */}
-      <div className="glass-card" style={{ padding: '1.75rem' }}>
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Plus size={18} color="var(--cyan-400)" />
+      <div className="card" style={{ padding: '1.75rem' }}>
+        <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)' }}>
+          <Plus size={18} color="var(--color-primary)" />
           Create New Question Set
         </h3>
 
@@ -227,7 +225,7 @@ export const QuestionSetManagement: React.FC = () => {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ height: '42px' }}>
+          <button type="submit" className="btn btn-primary" style={{ height: '42px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
             <Plus size={16} /> Create Set
           </button>
         </form>
@@ -236,31 +234,31 @@ export const QuestionSetManagement: React.FC = () => {
       {/* Question Sets List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {sets.map((set) => {
-          let phaseBadge = 'badge-cyan';
-          if (set.phase === 'phase2') phaseBadge = 'badge-purple';
-          if (set.phase === 'phase3') phaseBadge = 'badge-rose';
+          let phaseBadge = 'badge-primary';
+          if (set.phase === 'phase2') phaseBadge = 'badge-secondary';
+          if (set.phase === 'phase3') phaseBadge = 'badge-primary';
 
           const availableForThisPhase = allQuestions.filter(q => q.phase === set.phase && !q.is_archived);
           const currentItemIds = new Set((set.items || []).map(i => i.question_id));
           const unassignedQuestions = availableForThisPhase.filter(q => !currentItemIds.has(q.id));
 
           return (
-            <div key={set.id} className="glass-card" style={{ padding: '1.75rem' }}>
+            <div key={set.id} className="card" style={{ padding: '1.75rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                     <span className={`badge ${phaseBadge}`}>{set.phase.toUpperCase()}</span>
-                    <h3 style={{ fontSize: '1.35rem' }}>{set.set_name}</h3>
+                    <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>{set.set_name}</h3>
                     <button
                       onClick={() => handleTogglePublish(set)}
-                      className={`badge ${set.is_published ? 'badge-emerald' : 'badge-amber'}`}
+                      className={`badge ${set.is_published ? 'badge-success' : 'badge-warning'}`}
                       style={{ cursor: 'pointer', border: 'none' }}
                     >
                       {set.is_published ? 'PUBLISHED' : 'DRAFT'}
                     </button>
                   </div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
-                    {set.description || 'No description provided'} • Default Timer: <strong>{set.default_timer}s</strong>
+                  <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                    {set.description || 'No description provided'} • Default Timer: <strong style={{ color: 'var(--color-text)' }}>{set.default_timer}s</strong>
                   </div>
                 </div>
 
@@ -268,6 +266,7 @@ export const QuestionSetManagement: React.FC = () => {
                   <button
                     onClick={() => setAssignModalSet(set)}
                     className="btn btn-primary btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                   >
                     <Share2 size={14} /> Assign to Groups / Sections
                   </button>
@@ -276,7 +275,7 @@ export const QuestionSetManagement: React.FC = () => {
 
               {/* Items in this set */}
               <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginBottom: '0.6rem' }}>
+                <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 700, marginBottom: '0.6rem' }}>
                   Assigned Questions in this Set ({set.items?.length || 0})
                 </div>
 
@@ -289,25 +288,25 @@ export const QuestionSetManagement: React.FC = () => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          padding: '0.65rem 1rem',
-                          backgroundColor: 'rgba(0, 0, 0, 0.25)',
-                          border: '1px solid var(--border-subtle)',
+                          padding: '0.75rem 1rem',
+                          backgroundColor: 'var(--color-surface-secondary)',
+                          border: '1px solid var(--color-border)',
                           borderRadius: 'var(--radius-sm)',
                           fontSize: '0.875rem'
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--cyan-400)', fontWeight: 700 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-primary)', fontWeight: 700 }}>
                             #{idx + 1}
                           </span>
-                          <span style={{ fontWeight: 600, color: '#FFFFFF' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>
                             {item.question?.title || 'Question item'}
                           </span>
-                          <span className="badge badge-purple" style={{ fontSize: '0.65rem' }}>
+                          <span className="badge badge-secondary" style={{ fontSize: '0.7rem' }}>
                             {item.question?.question_type?.toUpperCase()}
                           </span>
                           {item.timer_override && (
-                            <span className="badge badge-amber" style={{ fontSize: '0.65rem' }}>
+                            <span className="badge badge-warning" style={{ fontSize: '0.7rem' }}>
                               Override: {item.timer_override}s
                             </span>
                           )}
@@ -325,7 +324,7 @@ export const QuestionSetManagement: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ color: 'var(--text-dim)', fontSize: '0.85rem', fontStyle: 'italic', padding: '0.75rem 0' }}>
+                  <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', fontStyle: 'italic', padding: '0.75rem 0' }}>
                     No questions added to this set yet. Add questions from the pool below.
                   </div>
                 )}
@@ -334,8 +333,8 @@ export const QuestionSetManagement: React.FC = () => {
               {/* Add from available questions pool */}
               {unassignedQuestions.length > 0 && (
                 <div style={{
-                  backgroundColor: 'rgba(10, 15, 29, 0.6)',
-                  border: '1px dashed var(--border-medium)',
+                  backgroundColor: 'var(--color-surface)',
+                  border: '1px dashed var(--color-border)',
                   borderRadius: 'var(--radius-md)',
                   padding: '1rem',
                   display: 'flex',
@@ -344,7 +343,7 @@ export const QuestionSetManagement: React.FC = () => {
                   flexWrap: 'wrap',
                   gap: '0.75rem'
                 }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
                     Add questions from pool ({unassignedQuestions.length} available):
                   </span>
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -371,6 +370,7 @@ export const QuestionSetManagement: React.FC = () => {
                       }}
                       disabled={!selectedQuestionToAdd[set.id]}
                       className="btn btn-secondary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
                     >
                       <Plus size={14} /> Add Selected Question
                     </button>
@@ -383,8 +383,8 @@ export const QuestionSetManagement: React.FC = () => {
       </div>
 
       {/* Active Group Assignments Table */}
-      <div className="glass-card" style={{ padding: '1.75rem' }}>
-        <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Active Group & Section Assignments</h3>
+      <div className="card" style={{ padding: '1.75rem' }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text)' }}>Active Group & Section Assignments</h3>
         <div className="custom-table-container">
           <table className="custom-table">
             <thead>
@@ -399,7 +399,7 @@ export const QuestionSetManagement: React.FC = () => {
             <tbody>
               {assignments.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>
                     No explicit set assignments created. Default set rules will apply.
                   </td>
                 </tr>
@@ -407,18 +407,18 @@ export const QuestionSetManagement: React.FC = () => {
                 assignments.map((a) => (
                   <tr key={a.id}>
                     <td>
-                      <span className="badge badge-purple">{a.target_type.toUpperCase()}</span>
+                      <span className="badge badge-primary">{a.target_type.toUpperCase()}</span>
                     </td>
                     <td>
-                      <strong style={{ color: 'var(--cyan-400)' }}>{a.target_value}</strong>
+                      <strong style={{ color: 'var(--color-primary)' }}>{a.target_value}</strong>
                     </td>
-                    <td style={{ fontWeight: 600, color: '#FFFFFF' }}>
+                    <td style={{ fontWeight: 600, color: 'var(--color-text)' }}>
                       {a.set_name || 'Question Set'}
                     </td>
                     <td>
-                      <span className="badge badge-emerald">ACTIVE</span>
+                      <span className="badge badge-success">ACTIVE</span>
                     </td>
-                    <td style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                    <td style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
                       {new Date(a.created_at).toLocaleString()}
                     </td>
                   </tr>
@@ -434,19 +434,28 @@ export const QuestionSetManagement: React.FC = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(15, 23, 42, 0.6)',
+          backdropFilter: 'blur(4px)',
           zIndex: 100,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '1.5rem'
         }}>
-          <div className="glass-card-glow" style={{ maxWidth: '520px', width: '100%', padding: '2rem' }}>
-            <h3 style={{ fontSize: '1.35rem', marginBottom: '0.5rem' }}>
-              Assign Set: {assignModalSet.set_name}
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+          <div className="card" style={{ maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-modal)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>
+                Assign Set: {assignModalSet.set_name}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setAssignModalSet(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
               Assign this question set to Sections A–E, Academic Years I–III, or specific finalists.
             </p>
 

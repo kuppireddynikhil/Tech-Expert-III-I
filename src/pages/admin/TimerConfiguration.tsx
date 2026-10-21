@@ -5,14 +5,8 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import type { Question, QuestionSet, PhaseControl } from '../../types';
 import {
-  Clock,
-  Layers,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
   Save,
-  ArrowRight,
-  Database
+  ArrowRight
 } from 'lucide-react';
 
 export const TimerConfiguration: React.FC = () => {
@@ -72,8 +66,8 @@ export const TimerConfiguration: React.FC = () => {
   if (loading || !phaseControls) {
     return (
       <div style={{ textAlign: 'center', padding: '5rem 0' }}>
-        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto', border: '3px solid rgba(0, 242, 254, 0.2)', borderTopColor: 'var(--cyan-400)', borderRadius: '50%' }} />
-        <p style={{ color: 'var(--text-muted)' }}>Loading Timer Hierarchy & Inheritance Tree...</p>
+        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto' }} />
+        <p style={{ color: 'var(--color-text-secondary)' }}>Loading Timer Hierarchy & Inheritance Tree...</p>
       </div>
     );
   }
@@ -86,18 +80,18 @@ export const TimerConfiguration: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Header */}
       <div>
-        <div className="badge badge-purple" style={{ marginBottom: '0.4rem' }}>
+        <div className="badge badge-primary" style={{ marginBottom: '0.4rem' }}>
           Timing Governance
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Custom Timer Engine</h1>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>Custom Timer Engine</h1>
+        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
           Inspect and configure authoritative timers across Question-level, Question-Set level, and Phase-level inheritance.
         </div>
       </div>
 
       {/* Inheritance Rules Infographic */}
-      <div className="glass-card" style={{ padding: '1.5rem', backgroundColor: 'rgba(15, 23, 42, 0.6)' }}>
-        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--cyan-400)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
+      <div className="card" style={{ padding: '1.5rem', backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
           Timer Precedence Hierarchy
         </div>
         <div style={{
@@ -108,22 +102,22 @@ export const TimerConfiguration: React.FC = () => {
           fontFamily: 'var(--font-mono)',
           fontSize: '0.85rem'
         }}>
-          <div style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(0, 242, 254, 0.1)', border: '1px solid var(--cyan-400)', borderRadius: 'var(--radius-sm)', color: '#FFFFFF' }}>
+          <div style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-sm)', color: 'var(--color-primary)', fontWeight: 600 }}>
             1. Question Override (Highest)
           </div>
-          <ArrowRight size={16} color="var(--text-dim)" />
-          <div style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(168, 85, 247, 0.1)', border: '1px solid var(--purple-400)', borderRadius: 'var(--radius-sm)', color: '#FFFFFF' }}>
+          <ArrowRight size={16} color="var(--color-text-secondary)" />
+          <div style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', color: 'var(--color-text)', fontWeight: 600 }}>
             2. Question Set Default
           </div>
-          <ArrowRight size={16} color="var(--text-dim)" />
-          <div style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', color: '#FFFFFF' }}>
+          <ArrowRight size={16} color="var(--color-text-secondary)" />
+          <div style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', color: 'var(--color-text-secondary)' }}>
             3. Phase Global Default
           </div>
         </div>
       </div>
 
       {/* Phase Selector Tabs */}
-      <div style={{ display: 'flex', gap: '0.75rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         {(['phase1', 'phase2', 'phase3'] as const).map((p) => (
           <button
             key={p}
@@ -138,8 +132,8 @@ export const TimerConfiguration: React.FC = () => {
       </div>
 
       {/* Question Sets Default Timers for Selected Phase */}
-      <div className="glass-card" style={{ padding: '1.75rem' }}>
-        <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
+      <div className="card" style={{ padding: '1.75rem' }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text)' }}>
           Question Sets Default Timers ({selectedPhase.toUpperCase()})
         </h3>
         <div className="custom-table-container">
@@ -156,10 +150,10 @@ export const TimerConfiguration: React.FC = () => {
               {phaseFilteredSets.map((s) => (
                 <tr key={s.id}>
                   <td>
-                    <strong style={{ color: '#FFFFFF' }}>{s.set_name}</strong>
+                    <strong style={{ color: 'var(--color-text)' }}>{s.set_name}</strong>
                   </td>
                   <td>
-                    <span className="badge badge-purple">{s.timer_policy}</span>
+                    <span className="badge badge-secondary">{s.timer_policy}</span>
                   </td>
                   <td style={{ width: '200px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -170,7 +164,7 @@ export const TimerConfiguration: React.FC = () => {
                         className="form-input"
                         style={{ width: '90px', padding: '0.4rem 0.6rem' }}
                       />
-                      <span>seconds</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>seconds</span>
                     </div>
                   </td>
                   <td>
@@ -181,6 +175,7 @@ export const TimerConfiguration: React.FC = () => {
                       }}
                       disabled={updatingId === s.id}
                       className="btn btn-secondary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
                       <Save size={13} /> Save Set Timer
                     </button>
@@ -193,8 +188,8 @@ export const TimerConfiguration: React.FC = () => {
       </div>
 
       {/* Individual Question Timers Table */}
-      <div className="glass-card" style={{ padding: '1.75rem' }}>
-        <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
+      <div className="card" style={{ padding: '1.75rem' }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text)' }}>
           Individual Question Timer Overrides ({selectedPhase.toUpperCase()})
         </h3>
 
@@ -216,13 +211,13 @@ export const TimerConfiguration: React.FC = () => {
                 return (
                   <tr key={q.id}>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{q.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{q.title}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
                         Type: {q.question_type.toUpperCase()} • Difficulty: {q.difficulty}
                       </div>
                     </td>
                     <td>
-                      <span className={`badge ${isOverridden ? 'badge-amber' : 'badge-cyan'}`}>
+                      <span className={`badge ${isOverridden ? 'badge-warning' : 'badge-primary'}`}>
                         {effective}s {isOverridden ? '(Overridden)' : '(Inherited)'}
                       </span>
                     </td>
@@ -246,6 +241,7 @@ export const TimerConfiguration: React.FC = () => {
                           }}
                           disabled={updatingId === q.id}
                           className="btn btn-primary btn-sm"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
                         >
                           <Save size={13} /> Apply
                         </button>

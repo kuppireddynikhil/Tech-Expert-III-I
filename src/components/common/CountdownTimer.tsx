@@ -74,27 +74,27 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
 
   const percentLeft = durationSeconds > 0 ? Math.min(100, (remainingSeconds / durationSeconds) * 100) : 0;
 
-  // Status colors
-  let colorClass = 'var(--cyan-400)';
-  let bgClass = 'rgba(0, 242, 254, 0.1)';
-  let borderClass = 'rgba(0, 242, 254, 0.3)';
+  // Status colors - Clean Blue Design System
+  let colorClass = 'var(--color-primary)';
+  let bgClass = 'var(--color-primary-light)';
+  let borderClass = '#BFDBFE';
 
   if (isReset) {
-    colorClass = 'var(--text-dim)';
-    bgClass = 'rgba(15, 23, 42, 0.6)';
-    borderClass = 'var(--border-subtle)';
+    colorClass = 'var(--color-disabled)';
+    bgClass = '#F1F5F9';
+    borderClass = 'var(--color-border)';
   } else if (isPaused) {
-    colorClass = 'var(--amber-400)';
-    bgClass = 'rgba(245, 158, 11, 0.15)';
-    borderClass = 'var(--amber-400)';
+    colorClass = 'var(--color-warning)';
+    bgClass = '#FEF3C7';
+    borderClass = '#FDE68A';
   } else if (percentLeft <= 20 || remainingSeconds <= 10) {
-    colorClass = 'var(--rose-400)';
-    bgClass = 'rgba(244, 63, 94, 0.15)';
-    borderClass = 'var(--rose-400)';
+    colorClass = 'var(--color-danger)';
+    bgClass = '#FEE2E2';
+    borderClass = '#FCA5A5';
   } else if (percentLeft <= 40) {
-    colorClass = 'var(--amber-400)';
-    bgClass = 'rgba(245, 158, 11, 0.15)';
-    borderClass = 'var(--amber-400)';
+    colorClass = 'var(--color-warning)';
+    bgClass = '#FEF3C7';
+    borderClass = '#FDE68A';
   }
 
   return (

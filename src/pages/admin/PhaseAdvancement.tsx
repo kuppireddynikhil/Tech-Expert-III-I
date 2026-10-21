@@ -102,9 +102,9 @@ export const PhaseAdvancement: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div>
-        <div className="badge badge-purple" style={{ marginBottom: '0.4rem' }}>Competition Control</div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Phase Advancement</h1>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+        <div className="badge badge-primary" style={{ marginBottom: '0.4rem' }}>Competition Control</div>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>Phase Advancement</h1>
+        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
           Choose how many participants move on to the next phase, review the ranking, and adjust individuals before publishing.
           Participants not selected cannot enter the next phase.
         </div>
@@ -116,15 +116,16 @@ export const PhaseAdvancement: React.FC = () => {
             key={t.id}
             onClick={() => setTarget(t.id)}
             className={`btn ${target === t.id ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
           >
             <ArrowUpCircle size={16} /> {t.label}
           </button>
         ))}
       </div>
 
-      <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Number to advance:</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Number to advance:</span>
           <input
             type="number"
             min={0}
@@ -134,12 +135,12 @@ export const PhaseAdvancement: React.FC = () => {
             style={{ width: '90px', padding: '0.5rem 0.75rem' }}
           />
         </div>
-        <button onClick={autoSelectTop} className="btn btn-secondary" disabled={loading}>
+        <button onClick={autoSelectTop} className="btn btn-secondary btn-sm" disabled={loading} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
           <Wand2 size={16} /> Select Top {limit || 0}
         </button>
 
         <div style={{ position: 'relative', flex: '1 1 200px' }}>
-          <Search size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="var(--color-text-secondary)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             className="form-input"
@@ -150,29 +151,29 @@ export const PhaseAdvancement: React.FC = () => {
           />
         </div>
 
-        <span className={`badge ${published ? 'badge-emerald' : 'badge-amber'}`}>
+        <span className={`badge ${published ? 'badge-success' : 'badge-warning'}`}>
           {published ? 'PUBLISHED' : 'NOT PUBLISHED'}
         </span>
-        <strong style={{ color: 'var(--cyan-400)' }}>{selected.size} selected</strong>
+        <strong style={{ color: 'var(--color-primary)' }}>{selected.size} selected</strong>
 
-        <button onClick={handlePublish} className="btn btn-primary" disabled={saving || loading || !sourceReady}>
+        <button onClick={handlePublish} className="btn btn-primary btn-sm" disabled={saving || loading || !sourceReady} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
           <Send size={16} /> {saving ? 'Saving...' : published ? 'Update & Publish' : 'Publish'}
         </button>
         {published && (
-          <button onClick={handleWithdraw} className="btn btn-danger" disabled={saving}>
+          <button onClick={handleWithdraw} className="btn btn-danger btn-sm" disabled={saving} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
             <Undo2 size={16} /> Withdraw
           </button>
         )}
       </div>
 
       {message && (
-        <div style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--cyan-400)', color: 'var(--cyan-400)', fontSize: '0.9rem' }}>
+        <div className="alert alert-info">
           {message}
         </div>
       )}
 
       {!sourceReady && (
-        <div style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--amber-400)', color: 'var(--amber-400)', fontSize: '0.9rem' }}>
+        <div className="alert alert-warning">
           Publish the Phase 1 → Phase 2 list first. Phase 3 candidates are chosen from the participants advanced to Phase 2.
         </div>
       )}
@@ -191,9 +192,9 @@ export const PhaseAdvancement: React.FC = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Loading ranking...</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>Loading ranking...</td></tr>
             ) : visible.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>No participants to show yet.</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>No participants to show yet.</td></tr>
             ) : (
               visible.map(c => {
                 const isSel = selected.has(c.user_id);
@@ -202,25 +203,30 @@ export const PhaseAdvancement: React.FC = () => {
                   <tr
                     key={c.user_id}
                     style={{
-                      backgroundColor: isSel ? 'rgba(16, 185, 129, 0.08)' : undefined,
-                      borderBottom: cutoff ? '2px dashed var(--amber-400)' : undefined
+                      backgroundColor: isSel ? '#EFF6FF' : undefined,
+                      borderBottom: cutoff ? '2px dashed var(--color-warning)' : undefined
                     }}
                   >
                     <td>
-                      <input type="checkbox" checked={isSel} onChange={() => toggle(c.user_id)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
+                      <input
+                        type="checkbox"
+                        checked={isSel}
+                        onChange={() => toggle(c.user_id)}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+                      />
                     </td>
                     <td><strong>#{c.rank}</strong></td>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{c.full_name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{c.email}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{c.full_name}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{c.email}</div>
                     </td>
                     <td>
-                      <span className="badge badge-cyan">{c.section}</span>{' '}
-                      <span className="badge badge-purple">{c.academic_year}</span>
+                      <span className="badge badge-primary">Sec {c.section}</span>{' '}
+                      <span className="badge badge-secondary">Yr {c.academic_year}</span>
                     </td>
-                    <td style={{ fontWeight: 700, color: 'var(--cyan-400)' }}>{c.score} pts</td>
-                    <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      {isSel && <CheckCircle2 size={14} color="var(--emerald-400)" style={{ verticalAlign: 'middle', marginRight: '4px' }} />}
+                    <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{c.score} pts</td>
+                    <td style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                      {isSel && <CheckCircle2 size={14} color="var(--color-success)" style={{ verticalAlign: 'middle', marginRight: '4px' }} />}
                       {c.detail}
                     </td>
                   </tr>

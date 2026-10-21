@@ -12,14 +12,10 @@ import {
   Trophy,
   ArrowRight,
   Clock,
-  CheckCircle2,
   AlertTriangle,
   Lock,
   Layers,
-  GraduationCap,
-  Building2,
-  User,
-  ExternalLink
+  User
 } from 'lucide-react';
 
 export const ParticipantDashboard: React.FC = () => {
@@ -55,96 +51,116 @@ export const ParticipantDashboard: React.FC = () => {
     loadParticipantOverview();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="container" style={{ textAlign: 'center', padding: '5rem 0' }}>
+        <div className="spinner" style={{
+          width: '40px',
+          height: '40px',
+          margin: '0 auto 1rem auto',
+          border: '3px solid var(--color-primary-light)',
+          borderTopColor: 'var(--color-primary)',
+          borderRadius: '50%'
+        }} />
+        <p style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>Loading participant dashboard...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Participant Profile Banner */}
-      <div className="glass-card-glow" style={{
+      <div className="glass-card" style={{
         padding: '2rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '1.5rem'
+        gap: '1.5rem',
+        boxShadow: 'var(--shadow-card)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
           <div style={{
-            width: '64px',
-            height: '64px',
+            width: '60px',
+            height: '60px',
             borderRadius: 'var(--radius-lg)',
-            background: 'var(--grad-primary)',
+            backgroundColor: 'var(--color-primary-light)',
+            border: '1px solid #BFDBFE',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-cyan)'
+            justifyContent: 'center'
           }}>
-            <User size={32} color="#070B14" />
+            <User size={30} color="var(--color-primary)" />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <h2 style={{ fontSize: '1.75rem' }}> Welcome to Tech Expert<br></br>{profile?.full_name}<br></br></h2>
+              <h2 style={{ fontSize: '1.6rem', color: 'var(--color-text)', margin: 0, fontWeight: 800 }}>
+                Welcome, {profile?.full_name}
+              </h2>
             </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+            <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '0.35rem' }}>
               {profile?.email} {profile?.college_id && `• ID: ${profile.college_id}`}
             </div>
           </div>
         </div>
 
         {/* Section & Academic Year Verified Database Fields */}
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <div style={{
-            backgroundColor: 'rgba(0, 242, 254, 0.08)',
-            border: '1px solid rgba(0, 242, 254, 0.25)',
+            backgroundColor: 'var(--color-primary-light)',
+            border: '1px solid #BFDBFE',
             padding: '0.75rem 1.25rem',
             borderRadius: 'var(--radius-md)',
-            textAlign: 'center'
+            textAlign: 'center',
+            minWidth: '120px'
           }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--cyan-400)', textTransform: 'uppercase', fontWeight: 700 }}>
+            <div style={{ fontSize: '0.7rem', color: 'var(--color-primary)', textTransform: 'uppercase', fontWeight: 700 }}>
               Assigned Section
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFFFFF' }}>
+            <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-text)' }}>
               Section {profile?.section}
             </div>
           </div>
 
           <div style={{
-            backgroundColor: 'rgba(168, 85, 247, 0.08)',
-            border: '1px solid rgba(168, 85, 247, 0.25)',
+            backgroundColor: '#EFF6FF',
+            border: '1px solid #DBEAFE',
             padding: '0.75rem 1.25rem',
             borderRadius: 'var(--radius-md)',
-            textAlign: 'center'
+            textAlign: 'center',
+            minWidth: '120px'
           }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--purple-400)', textTransform: 'uppercase', fontWeight: 700 }}>
+            <div style={{ fontSize: '0.7rem', color: '#1D4ED8', textTransform: 'uppercase', fontWeight: 700 }}>
               Academic Year
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFFFFF' }}>
+            <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-text)' }}>
               Year {profile?.academic_year}
             </div>
           </div>
         </div>
       </div>
+
       {/* Competition Phases Heading */}
-      <div style={{ marginTop: '0.75rem', marginBottom: '-0.25rem' }}>
+      <div>
         <h2 style={{
-          fontSize: '1.65rem',
+          fontSize: '1.5rem',
           fontWeight: 800,
-          fontFamily: 'var(--font-display)',
-          letterSpacing: '-0.02em',
-          color: '#FFFFFF',
+          color: 'var(--color-text)',
           display: 'flex',
           alignItems: 'center',
           gap: '0.65rem',
           marginBottom: '0.35rem'
         }}>
-          <Layers size={24} color="var(--cyan-400)" />
+          <Layers size={22} color="var(--color-primary)" />
           Competition Phases
         </h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.925rem', margin: 0 }}>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
           Access your active competition challenges and track qualification status across each phase.
         </p>
       </div>
 
-      {/* Competition Phase Cards (Each occupies a full row matching the banner width) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
+      {/* Competition Phase Cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%' }}>
         {/* Phase 1 Card */}
         <div className="glass-card" style={{
           padding: '1.75rem 2rem',
@@ -166,20 +182,20 @@ export const ParticipantDashboard: React.FC = () => {
                 width: '46px',
                 height: '46px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(0, 242, 254, 0.12)',
-                border: '1px solid rgba(0, 242, 254, 0.25)',
+                backgroundColor: 'var(--color-primary-light)',
+                border: '1px solid #BFDBFE',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <Zap size={24} color="var(--cyan-400)" />
+                <Zap size={24} color="var(--color-primary)" />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.25rem', color: '#FFFFFF', fontWeight: 700 }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem', color: 'var(--color-text)', fontWeight: 700 }}>
                   Phase 1: Quick Quiz
                 </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', margin: 0, lineHeight: 1.5 }}>
                   20 Python fundamental MCQs with strict 15s per-question timer. Top 15 qualify for Phase 2.
                 </p>
               </div>
@@ -207,16 +223,16 @@ export const ParticipantDashboard: React.FC = () => {
           }}>
             <div style={{
               fontSize: '0.825rem',
-              color: 'var(--text-muted)',
-              backgroundColor: 'rgba(0, 0, 0, 0.25)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              padding: '0.6rem 0.95rem',
+              color: 'var(--color-text-secondary)',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid var(--border-subtle)',
+              padding: '0.55rem 0.95rem',
               borderRadius: 'var(--radius-sm)',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <Clock size={15} color="var(--cyan-400)" />
+              <Clock size={15} color="var(--color-primary)" />
               <span>Timer: 15s / question • Passing: Top 15</span>
             </div>
 
@@ -224,9 +240,9 @@ export const ParticipantDashboard: React.FC = () => {
               <Link
                 to="/waiting-room/phase1"
                 className="btn btn-secondary"
-                style={{ minWidth: '220px', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                style={{ minWidth: '220px' }}
               >
-                <Lock size={15} color="var(--rose-400)" /> Phase 1 Closed (Locked)
+                <Lock size={15} color="var(--color-danger)" /> Phase 1 Closed (Locked)
               </Link>
             ) : phases?.phase1?.exam_started_at ? (
               <Link
@@ -277,20 +293,20 @@ export const ParticipantDashboard: React.FC = () => {
                 width: '46px',
                 height: '46px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(168, 85, 247, 0.12)',
-                border: '1px solid rgba(168, 85, 247, 0.25)',
+                backgroundColor: 'var(--color-primary-light)',
+                border: '1px solid #BFDBFE',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <Code2 size={24} color="var(--purple-400)" />
+                <Code2 size={24} color="var(--color-primary)" />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.25rem', color: '#FFFFFF', fontWeight: 700 }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem', color: 'var(--color-text)', fontWeight: 700 }}>
                   Phase 2: Debugging Challenge
                 </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', margin: 0, lineHeight: 1.5 }}>
                   3 Debugging programs inside Monaco Editor with 15 minutes overall phase limit. Top 5 qualify.
                 </p>
               </div>
@@ -318,16 +334,16 @@ export const ParticipantDashboard: React.FC = () => {
           }}>
             <div style={{
               fontSize: '0.825rem',
-              color: 'var(--text-muted)',
-              backgroundColor: 'rgba(0, 0, 0, 0.25)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              padding: '0.6rem 0.95rem',
+              color: 'var(--color-text-secondary)',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid var(--border-subtle)',
+              padding: '0.55rem 0.95rem',
               borderRadius: 'var(--radius-sm)',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <Clock size={15} color="var(--purple-400)" />
+              <Clock size={15} color="var(--color-primary)" />
               <span>Total Deadline: 15 Mins • Gemini AI Evaluated</span>
             </div>
 
@@ -335,14 +351,14 @@ export const ParticipantDashboard: React.FC = () => {
               <Link
                 to="/waiting-room/phase2"
                 className="btn btn-secondary"
-                style={{ minWidth: '220px', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                style={{ minWidth: '220px' }}
               >
-                <Lock size={15} color="var(--rose-400)" /> Phase 2 Closed (Locked)
+                <Lock size={15} color="var(--color-danger)" /> Phase 2 Closed (Locked)
               </Link>
             ) : phases?.phase2?.exam_started_at ? (
               <Link
                 to="/phase2"
-                className="btn btn-accent"
+                className="btn btn-primary"
                 style={{ minWidth: '220px' }}
               >
                 Enter Debug Challenge <ArrowRight size={15} />
@@ -350,7 +366,7 @@ export const ParticipantDashboard: React.FC = () => {
             ) : (phases?.phase2?.is_activated || phases?.phase2?.status === 'active') ? (
               <Link
                 to="/waiting-room/phase2"
-                className="btn btn-accent"
+                className="btn btn-primary"
                 style={{ minWidth: '220px' }}
               >
                 Enter Waiting Room <ArrowRight size={15} />
@@ -388,20 +404,20 @@ export const ParticipantDashboard: React.FC = () => {
                 width: '46px',
                 height: '46px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(244, 63, 94, 0.12)',
-                border: '1px solid rgba(244, 63, 94, 0.25)',
+                backgroundColor: '#FEF3C7',
+                border: '1px solid #FDE68A',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <Trophy size={24} color="var(--amber-400)" />
+                <Trophy size={24} color="var(--color-warning)" />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.25rem', color: '#FFFFFF', fontWeight: 700 }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem', color: 'var(--color-text)', fontWeight: 700 }}>
                   Phase 3: Logic Builder (Finals)
                 </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', margin: 0, lineHeight: 1.5 }}>
                   3 complex algorithmic challenges. Choose order freely. Exactly 3 Run attempts per program before permanent lock!
                 </p>
               </div>
@@ -429,16 +445,17 @@ export const ParticipantDashboard: React.FC = () => {
           }}>
             <div style={{
               fontSize: '0.825rem',
-              color: 'var(--rose-400)',
-              backgroundColor: 'rgba(244, 63, 94, 0.08)',
-              border: '1px solid rgba(244, 63, 94, 0.2)',
-              padding: '0.6rem 0.95rem',
+              color: 'var(--color-danger)',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FCA5A5',
+              padding: '0.55rem 0.95rem',
               borderRadius: 'var(--radius-sm)',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              fontWeight: 500
             }}>
-              <AlertTriangle size={15} color="var(--rose-400)" />
+              <AlertTriangle size={15} color="var(--color-danger)" />
               <span>Strict 3 Attempts Max • Permanent Lock on 3 Fails</span>
             </div>
 
@@ -446,9 +463,9 @@ export const ParticipantDashboard: React.FC = () => {
               <Link
                 to="/waiting-room/phase3"
                 className="btn btn-secondary"
-                style={{ minWidth: '220px', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                style={{ minWidth: '220px' }}
               >
-                <Lock size={15} color="var(--rose-400)" /> Phase 3 Closed (Locked)
+                <Lock size={15} color="var(--color-danger)" /> Phase 3 Closed (Locked)
               </Link>
             ) : phases?.phase3?.exam_started_at ? (
               <Link

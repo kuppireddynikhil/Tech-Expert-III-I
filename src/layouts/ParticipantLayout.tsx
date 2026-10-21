@@ -23,11 +23,11 @@ export const ParticipantLayout: React.FC = () => {
         <div className="spinner" style={{
           width: '40px',
           height: '40px',
-          border: '3px solid rgba(0, 242, 254, 0.2)',
-          borderTopColor: 'var(--cyan-400)',
+          border: '3px solid var(--color-primary-light)',
+          borderTopColor: 'var(--color-primary)',
           borderRadius: '50%'
         }} />
-        <div style={{ color: 'var(--text-muted)' }}>Verifying participant session...</div>
+        <div style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>Verifying participant session...</div>
       </div>
     );
   }
@@ -38,7 +38,7 @@ export const ParticipantLayout: React.FC = () => {
 
   if (profile?.registration_status === 'suspended' || profile?.registration_status === 'disqualified') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-background)' }}>
         <Navbar />
         <main style={{ flex: 1, padding: '3rem 0' }}>
           <div className="container-narrow">
@@ -48,15 +48,15 @@ export const ParticipantLayout: React.FC = () => {
                 height: '60px',
                 margin: '0 auto 1.5rem auto',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(244, 63, 94, 0.15)',
+                backgroundColor: '#FEE2E2',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <AlertTriangle size={32} color="var(--rose-400)" />
+                <AlertTriangle size={32} color="var(--color-danger)" />
               </div>
-              <h2 style={{ marginBottom: '1rem', color: 'var(--rose-400)' }}>Account Access Restricted</h2>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              <h2 style={{ marginBottom: '1rem', color: 'var(--color-danger)' }}>Account Access Restricted</h2>
+              <p style={{ color: 'var(--color-text-secondary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
                 Your participant account is currently flagged as <strong>{profile.registration_status}</strong> by the event administrator.
                 Please contact the SVCE Tech Expert organizing committee for assistance.
               </p>

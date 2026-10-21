@@ -1842,6 +1842,7 @@ export const api = {
       if (!rpcErr && Array.isArray(rpcData) && rpcData.length > 0) {
         return rpcData as PhaseLeaderboardEntry[];
       }
+      if (rpcErr) console.error('[leaderboard] get_phase_leaderboard failed - run migration 20261021000000_fix_visibility_idempotent.sql:', rpcErr.message);
     } catch (_) {
       // Fallback to direct client query below
     }
@@ -2094,6 +2095,7 @@ export const api = {
       if (!error && typeof data === 'number') {
         return data;
       }
+      if (error) console.error('[waiting room] get_waiting_room_count failed - run migration 20261021000000_fix_visibility_idempotent.sql:', error.message);
     } catch (_) {
       // ignore and fallback below
     }

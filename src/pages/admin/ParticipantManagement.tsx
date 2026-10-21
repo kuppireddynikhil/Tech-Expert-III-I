@@ -3,22 +3,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
-import type { Profile, SectionType, AcademicYearType, RegistrationStatus, CompetitionSession } from '../../types';
+import type { Profile, RegistrationStatus, CompetitionSession } from '../../types';
 import {
-  Users,
   Search,
-  Filter,
   UserCheck,
   UserX,
   AlertTriangle,
   RotateCcw,
-  CheckCircle2,
-  Shield,
-  Clock,
-  Layers,
   Play,
   XCircle,
-  HelpCircle
+  X
 } from 'lucide-react';
 
 export const ParticipantManagement: React.FC = () => {
@@ -137,33 +131,33 @@ export const ParticipantManagement: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Header */}
       <div>
-        <div className="badge badge-purple" style={{ marginBottom: '0.4rem' }}>
+        <div className="badge badge-primary" style={{ marginBottom: '0.4rem' }}>
           User Administration
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Participant Management</h1>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>Participant Management</h1>
+        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
           Inspect participants across Sections A–E and Years I–III, govern account status, and authorize exam re-entry.
         </div>
       </div>
 
       {/* Pending Re-entry Requests Alert Banner (Modification A) */}
       {pendingReentries.length > 0 && (
-        <div className="glass-card" style={{
+        <div className="card" style={{
           padding: '1.25rem 1.5rem',
-          border: '1px solid var(--amber-400)',
-          backgroundColor: 'rgba(245, 158, 11, 0.08)',
+          border: '1px solid var(--color-warning)',
+          backgroundColor: '#FFFBEB',
           display: 'flex',
           flexDirection: 'column',
           gap: '1rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <AlertTriangle size={20} color="var(--amber-400)" />
-              <strong style={{ color: '#FFFFFF', fontSize: '1rem' }}>
+              <AlertTriangle size={20} color="var(--color-warning)" />
+              <strong style={{ color: 'var(--color-text)', fontSize: '1rem' }}>
                 Pending Exam Re-Entry Requests ({pendingReentries.length})
               </strong>
             </div>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
               Requires administrator decision: Resume Session vs Authorize Fresh Attempt
             </span>
           </div>
@@ -182,18 +176,19 @@ export const ParticipantManagement: React.FC = () => {
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
                     padding: '0.75rem 1rem',
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    backgroundColor: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: 'var(--radius-sm)',
                     gap: '1rem'
                   }}
                 >
                   <div>
-                    <span style={{ fontWeight: 600, color: '#FFFFFF' }}>{participant.full_name}</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginLeft: '0.5rem' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{participant.full_name}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginLeft: '0.5rem' }}>
                       ({participant.email}) — Sec {participant.section}, Yr {participant.academic_year}
                     </span>
                     {sess.reentry_reason && (
-                      <div style={{ fontSize: '0.78rem', color: 'var(--cyan-400)', marginTop: '0.2rem' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--color-primary)', marginTop: '0.2rem', fontWeight: 500 }}>
                         Reason: &quot;{sess.reentry_reason}&quot;
                       </div>
                     )}
@@ -203,6 +198,7 @@ export const ParticipantManagement: React.FC = () => {
                     <button
                       onClick={() => setReentryTarget({ user: participant, session: sess })}
                       className="btn btn-primary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
                       <RotateCcw size={13} />
                       Review & Decide
@@ -216,9 +212,9 @@ export const ParticipantManagement: React.FC = () => {
       )}
 
       {/* Filter and Search Bar */}
-      <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ flex: '1 1 240px', position: 'relative' }}>
-          <Search size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="var(--color-text-secondary)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             className="form-input"
@@ -231,12 +227,12 @@ export const ParticipantManagement: React.FC = () => {
 
         {/* Section Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Section:</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Section:</span>
           <select
             className="form-select"
             value={selectedSection}
             onChange={(e) => setSelectedSection(e.target.value)}
-            style={{ width: '120px', padding: '0.55rem 0.75rem', fontSize: '0.85rem' }}
+            style={{ width: '120px', padding: '0.55rem 0.75rem', fontSize: '0.875rem' }}
           >
             <option value="ALL">All Sec</option>
             <option value="A">Section A</option>
@@ -249,12 +245,12 @@ export const ParticipantManagement: React.FC = () => {
 
         {/* Year Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Year:</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Year:</span>
           <select
             className="form-select"
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            style={{ width: '120px', padding: '0.55rem 0.75rem', fontSize: '0.85rem' }}
+            style={{ width: '120px', padding: '0.55rem 0.75rem', fontSize: '0.875rem' }}
           >
             <option value="ALL">All Years</option>
             <option value="I">Year I</option>
@@ -265,12 +261,12 @@ export const ParticipantManagement: React.FC = () => {
 
         {/* Status Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status:</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Status:</span>
           <select
             className="form-select"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            style={{ width: '130px', padding: '0.55rem 0.75rem', fontSize: '0.85rem' }}
+            style={{ width: '130px', padding: '0.55rem 0.75rem', fontSize: '0.875rem' }}
           >
             <option value="ALL">All Status</option>
             <option value="registered">Registered</option>
@@ -284,8 +280,8 @@ export const ParticipantManagement: React.FC = () => {
         <button
           onClick={handleActivateAll}
           disabled={activatingAll || loading}
-          className="btn btn-success"
-          style={{ marginLeft: 'auto' }}
+          className="btn btn-primary btn-sm"
+          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
           title="Activate every shown participant that is not already active or disqualified"
         >
           <UserCheck size={16} />
@@ -310,41 +306,41 @@ export const ParticipantManagement: React.FC = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
                   Loading participants directory...
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
                   No participants found matching the selected filters.
                 </td>
               </tr>
             ) : (
               filtered.map((p) => {
-                let statusBadge = 'badge-cyan';
-                if (p.registration_status === 'active') statusBadge = 'badge-emerald';
-                if (p.registration_status === 'suspended') statusBadge = 'badge-amber';
-                if (p.registration_status === 'disqualified') statusBadge = 'badge-rose';
+                let statusBadge = 'badge-primary';
+                if (p.registration_status === 'active') statusBadge = 'badge-success';
+                if (p.registration_status === 'suspended') statusBadge = 'badge-warning';
+                if (p.registration_status === 'disqualified') statusBadge = 'badge-danger';
 
                 const pSession = sessions.find(s => s.participant_id === p.user_id);
 
                 return (
                   <tr key={p.user_id}>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{p.full_name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{p.email}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{p.full_name}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{p.email}</div>
                     </td>
                     <td>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
                         {p.college_id || '—'}
                       </span>
                     </td>
                     <td>
-                      <span className="badge badge-cyan">Sec {p.section}</span>
+                      <span className="badge badge-primary">Sec {p.section}</span>
                     </td>
                     <td>
-                      <span className="badge badge-purple">Yr {p.academic_year}</span>
+                      <span className="badge badge-secondary">Yr {p.academic_year}</span>
                     </td>
                     <td>
                       <span className={`badge ${statusBadge}`}>{p.registration_status?.toUpperCase()}</span>
@@ -355,25 +351,25 @@ export const ParticipantManagement: React.FC = () => {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             <span className={`badge ${
                               pSession.status === 'completed'
-                                ? 'badge-emerald'
+                                ? 'badge-success'
                                 : pSession.is_locked
-                                  ? 'badge-rose'
-                                  : 'badge-cyan'
+                                  ? 'badge-danger'
+                                  : 'badge-primary'
                             }`} style={{ fontSize: '0.7rem' }}>
                               {pSession.status.toUpperCase()}
                             </span>
                             {pSession.reentry_status === 'requested' && (
-                              <span className="badge badge-amber" style={{ fontSize: '0.65rem' }}>
+                              <span className="badge badge-warning" style={{ fontSize: '0.65rem' }}>
                                 RE-ENTRY REQ
                               </span>
                             )}
                           </div>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            Score: {pSession.final_score} pts • Q{pSession.current_question_index || 0 + 1}
+                          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+                            Score: {pSession.final_score} pts • Q{(pSession.current_question_index || 0) + 1}
                           </span>
                         </div>
                       ) : (
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
                           Not Started
                         </span>
                       )}
@@ -394,7 +390,8 @@ export const ParticipantManagement: React.FC = () => {
                         {p.registration_status !== 'active' && (
                           <button
                             onClick={() => handleUpdateStatus(p, 'active')}
-                            className="btn btn-success btn-sm"
+                            className="btn btn-secondary btn-sm"
+                            style={{ color: 'var(--color-success)', borderColor: 'var(--color-success)' }}
                             title="Activate account"
                           >
                             <UserCheck size={13} />
@@ -404,6 +401,7 @@ export const ParticipantManagement: React.FC = () => {
                           <button
                             onClick={() => handleUpdateStatus(p, 'suspended')}
                             className="btn btn-secondary btn-sm"
+                            style={{ color: 'var(--color-warning)', borderColor: 'var(--color-warning)' }}
                             title="Suspend account"
                           >
                             <UserX size={13} />
@@ -433,7 +431,7 @@ export const ParticipantManagement: React.FC = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backgroundColor: 'rgba(15, 23, 42, 0.6)',
           backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
@@ -441,41 +439,43 @@ export const ParticipantManagement: React.FC = () => {
           zIndex: 1000,
           padding: '1.5rem'
         }}>
-          <div className="glass-card" style={{ maxWidth: '520px', width: '100%', padding: '2rem' }}>
+          <div className="card" style={{ maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: 'var(--shadow-modal)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <RotateCcw size={20} color="var(--cyan-400)" />
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Authorize Exam Re-Entry</h3>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <RotateCcw size={18} color="var(--color-primary)" />
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>Authorize Exam Re-Entry</h3>
               </div>
               <button
                 onClick={() => setReentryTarget(null)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
               >
-                &times;
+                <X size={20} />
               </button>
             </div>
 
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
-              Participant: <strong style={{ color: '#FFFFFF' }}>{reentryTarget.user.full_name}</strong> ({reentryTarget.user.email})<br />
-              Current Session: <span className="badge badge-purple" style={{ fontSize: '0.7rem' }}>{reentryTarget.session.phase.toUpperCase()}</span> — Status: <strong style={{ color: 'var(--amber-400)' }}>{reentryTarget.session.status}</strong> (Locked: {reentryTarget.session.is_locked ? 'Yes' : 'No'})
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+              Participant: <strong style={{ color: 'var(--color-text)' }}>{reentryTarget.user.full_name}</strong> ({reentryTarget.user.email})<br />
+              Current Session: <span className="badge badge-primary" style={{ fontSize: '0.75rem' }}>{reentryTarget.session.phase.toUpperCase()}</span> — Status: <strong style={{ color: 'var(--color-warning)' }}>{reentryTarget.session.status}</strong> (Locked: {reentryTarget.session.is_locked ? 'Yes' : 'No'})
             </p>
 
             {reentryTarget.session.reentry_reason && (
               <div style={{
                 padding: '0.75rem 1rem',
-                backgroundColor: 'rgba(0, 242, 254, 0.08)',
-                border: '1px solid var(--border-subtle)',
+                backgroundColor: 'var(--color-surface-secondary)',
+                border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-sm)',
                 marginBottom: '1.25rem',
                 fontSize: '0.85rem'
               }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Participant Stated Reason:</div>
-                <div style={{ color: '#FFFFFF', marginTop: '0.2rem' }}>&quot;{reentryTarget.session.reentry_reason}&quot;</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Participant Stated Reason:</div>
+                <div style={{ color: 'var(--color-text)', marginTop: '0.2rem', fontWeight: 500 }}>&quot;{reentryTarget.session.reentry_reason}&quot;</div>
               </div>
             )}
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+              <label className="form-label">
                 Administrative Audit Reason:
               </label>
               <input
@@ -504,7 +504,7 @@ export const ParticipantManagement: React.FC = () => {
                 onClick={() => handleReentryDecision('fresh')}
                 disabled={processingReentry}
                 className="btn btn-secondary"
-                style={{ justifyContent: 'center', borderColor: 'var(--cyan-400)', color: 'var(--cyan-400)' }}
+                style={{ justifyContent: 'center', borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}
               >
                 <RotateCcw size={16} />
                 Authorize Fresh Attempt (Reset Timer, Preserve History)

@@ -4,22 +4,17 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import type { LeaderboardEntry, CompetitionSettings, SectionType, AcademicYearType, PhaseLeaderboardEntry, PhaseId } from '../types';
+import type { LeaderboardEntry, CompetitionSettings, PhaseLeaderboardEntry, PhaseId } from '../types';
 import confetti from 'canvas-confetti';
 import {
   Trophy,
   Medal,
   Crown,
   Search,
-  Filter,
   EyeOff,
   Sparkles,
-  Users,
-  CheckCircle2,
   Zap,
-  Code2,
-  Layers,
-  Clock
+  Code2
 } from 'lucide-react';
 
 export const Leaderboard: React.FC = () => {
@@ -48,8 +43,8 @@ export const Leaderboard: React.FC = () => {
         // If winner declared, shoot confetti
         if (s.winner_id) {
           confetti({
-            particleCount: 120,
-            spread: 80,
+            particleCount: 100,
+            spread: 70,
             origin: { y: 0.4 }
           });
         }
@@ -107,8 +102,8 @@ export const Leaderboard: React.FC = () => {
   if (loading) {
     return (
       <div className="container" style={{ textAlign: 'center', padding: '5rem 0' }}>
-        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto', border: '3px solid rgba(245, 158, 11, 0.2)', borderTopColor: 'var(--amber-400)', borderRadius: '50%' }} />
-        <p style={{ color: 'var(--text-muted)' }}>Loading official competition rankings...</p>
+        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto 1rem auto' }} />
+        <p style={{ color: 'var(--color-text-secondary)' }}>Loading official competition rankings...</p>
       </div>
     );
   }
@@ -117,21 +112,21 @@ export const Leaderboard: React.FC = () => {
   if (!settings?.leaderboard_visible && !isAdmin) {
     return (
       <div className="container-narrow">
-        <div className="glass-card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
+        <div className="card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
           <div style={{
             width: '64px',
             height: '64px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+            backgroundColor: 'var(--color-primary-light)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1.5rem auto'
           }}>
-            <EyeOff size={32} color="var(--amber-400)" />
+            <EyeOff size={32} color="var(--color-primary)" />
           </div>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '0.75rem' }}>Leaderboard Under Review</h2>
-          <p style={{ color: 'var(--text-muted)', maxWidth: '500px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '1.8rem', marginBottom: '0.75rem', color: 'var(--color-text)' }}>Leaderboard Under Review</h2>
+          <p style={{ color: 'var(--color-text-secondary)', maxWidth: '500px', margin: '0 auto' }}>
             The official event leaderboard is currently hidden by the organizer while evaluations are verified.
             Please check back soon for the confirmed standings.
           </p>
@@ -144,13 +139,13 @@ export const Leaderboard: React.FC = () => {
     <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Leaderboard Header */}
       <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto' }}>
-        <div className="badge badge-amber" style={{ marginBottom: '0.75rem' }}>
+        <div className="badge badge-primary" style={{ marginBottom: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
           <Sparkles size={14} /> SVCE Official Rankings
         </div>
-        <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', marginBottom: '0.5rem' }}>
+        <h1 style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)', marginBottom: '0.5rem', color: 'var(--color-text)' }}>
           Tech Expert 2K26 Leaderboard
         </h1>
-        <p style={{ color: 'var(--text-muted)' }}>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem' }}>
           Real-time aggregated standings across Quick Quiz, Debugging Challenge, and Logic Builder Finals.
         </p>
       </div>
@@ -168,7 +163,7 @@ export const Leaderboard: React.FC = () => {
           className={`btn ${activeTab === 'overall' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
           style={{ padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-md)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
         >
-          <Trophy size={16} /> Overall Fest Standings
+          <Trophy size={16} /> Overall Standings
         </button>
         <button
           onClick={() => setActiveTab('phase1')}
@@ -197,57 +192,69 @@ export const Leaderboard: React.FC = () => {
       {activeTab === 'overall' && entries.length > 0 && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
           gap: '1.5rem',
-          maxWidth: '900px',
+          maxWidth: '850px',
           margin: '0 auto',
           width: '100%'
         }}>
           {/* Winner Card */}
           {winner && (
-            <div className="glass-card-glow" style={{
+            <div className="card" style={{
               padding: '2rem',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               textAlign: 'center',
-              borderColor: 'var(--amber-400)',
-              boxShadow: 'var(--shadow-amber)'
+              border: '2px solid var(--color-primary)',
+              boxShadow: 'var(--shadow-card)',
+              position: 'relative',
+              overflow: 'hidden'
             }}>
               <div style={{
-                width: '60px',
-                height: '60px',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                backgroundColor: 'var(--color-primary)'
+              }} />
+              <div style={{
+                width: '64px',
+                height: '64px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                border: '2px solid var(--amber-400)',
+                backgroundColor: 'var(--color-primary-light)',
+                border: '2px solid var(--color-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '1rem'
               }}>
-                <Crown size={32} color="var(--amber-400)" />
+                <Crown size={32} color="var(--color-primary)" />
               </div>
-              <span className="badge badge-amber" style={{ marginBottom: '0.5rem' }}>EVENT WINNER</span>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{winner.full_name}</h3>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+              <span className="badge badge-primary" style={{ marginBottom: '0.5rem', fontWeight: 700 }}>EVENT WINNER</span>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.25rem', color: 'var(--color-text)' }}>{winner.full_name}</h3>
+              <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
                 Section {winner.section} • Year {winner.academic_year}
               </div>
               <div style={{
                 display: 'flex',
-                gap: '1.5rem',
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                padding: '0.75rem 1.5rem',
+                gap: '1.75rem',
+                backgroundColor: 'var(--color-surface-secondary)',
+                padding: '0.85rem 1.75rem',
                 borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-subtle)'
+                border: '1px solid var(--color-border)',
+                width: '100%',
+                justifyContent: 'center'
               }}>
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Total Score</div>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--cyan-400)' }}>{winner.total_score}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total Score</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-primary)' }}>{winner.total_score}</div>
                 </div>
-                <div style={{ width: '1px', backgroundColor: 'var(--border-subtle)' }} />
+                <div style={{ width: '1px', backgroundColor: 'var(--color-border)' }} />
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Phase 3 Solved</div>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--emerald-400)' }}>{winner.phase3_solved} / 3</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Phase 3 Solved</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-success)' }}>{winner.phase3_solved} / 3</div>
                 </div>
               </div>
             </div>
@@ -255,48 +262,61 @@ export const Leaderboard: React.FC = () => {
 
           {/* Runner-up Card */}
           {runnerUp && (
-            <div className="glass-card" style={{
+            <div className="card" style={{
               padding: '2rem',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               textAlign: 'center',
-              borderColor: 'rgba(255, 255, 255, 0.3)'
+              border: '1px solid var(--color-border)',
+              boxShadow: 'var(--shadow-card)',
+              position: 'relative',
+              overflow: 'hidden'
             }}>
               <div style={{
-                width: '60px',
-                height: '60px',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                backgroundColor: 'var(--color-border)'
+              }} />
+              <div style={{
+                width: '64px',
+                height: '64px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                border: '2px solid rgba(255, 255, 255, 0.4)',
+                backgroundColor: 'var(--color-surface-secondary)',
+                border: '2px solid var(--color-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '1rem'
               }}>
-                <Medal size={32} color="#E2E8F0" />
+                <Medal size={32} color="var(--color-text-secondary)" />
               </div>
-              <span className="badge badge-cyan" style={{ marginBottom: '0.5rem' }}>RUNNER-UP</span>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{runnerUp.full_name}</h3>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+              <span className="badge badge-secondary" style={{ marginBottom: '0.5rem', fontWeight: 700 }}>RUNNER-UP</span>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.25rem', color: 'var(--color-text)' }}>{runnerUp.full_name}</h3>
+              <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
                 Section {runnerUp.section} • Year {runnerUp.academic_year}
               </div>
               <div style={{
                 display: 'flex',
-                gap: '1.5rem',
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                padding: '0.75rem 1.5rem',
+                gap: '1.75rem',
+                backgroundColor: 'var(--color-surface-secondary)',
+                padding: '0.85rem 1.75rem',
                 borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-subtle)'
+                border: '1px solid var(--color-border)',
+                width: '100%',
+                justifyContent: 'center'
               }}>
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Total Score</div>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--cyan-400)' }}>{runnerUp.total_score}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total Score</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-primary)' }}>{runnerUp.total_score}</div>
                 </div>
-                <div style={{ width: '1px', backgroundColor: 'var(--border-subtle)' }} />
+                <div style={{ width: '1px', backgroundColor: 'var(--color-border)' }} />
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Phase 3 Solved</div>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--emerald-400)' }}>{runnerUp.phase3_solved} / 3</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Phase 3 Solved</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-success)' }}>{runnerUp.phase3_solved} / 3</div>
                 </div>
               </div>
             </div>
@@ -305,9 +325,9 @@ export const Leaderboard: React.FC = () => {
       )}
 
       {/* Filter and Search Bar */}
-      <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="card" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ flex: '1 1 240px', position: 'relative' }}>
-          <Search size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="var(--color-text-secondary)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             className="form-input"
@@ -320,12 +340,12 @@ export const Leaderboard: React.FC = () => {
 
         {/* Section Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Section:</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Section:</span>
           <select
             className="form-select"
             value={selectedSection}
             onChange={(e) => setSelectedSection(e.target.value)}
-            style={{ width: '120px', padding: '0.55rem 0.75rem', fontSize: '0.85rem' }}
+            style={{ width: '130px', padding: '0.55rem 0.75rem', fontSize: '0.875rem' }}
           >
             <option value="ALL">All Sections</option>
             <option value="A">Section A</option>
@@ -338,12 +358,12 @@ export const Leaderboard: React.FC = () => {
 
         {/* Year Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Year:</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Year:</span>
           <select
             className="form-select"
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            style={{ width: '120px', padding: '0.55rem 0.75rem', fontSize: '0.85rem' }}
+            style={{ width: '130px', padding: '0.55rem 0.75rem', fontSize: '0.875rem' }}
           >
             <option value="ALL">All Years</option>
             <option value="I">Year I</option>
@@ -372,7 +392,7 @@ export const Leaderboard: React.FC = () => {
             <tbody>
               {filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
                     No participants matching the selected filters.
                   </td>
                 </tr>
@@ -387,41 +407,41 @@ export const Leaderboard: React.FC = () => {
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           {isTop1 ? (
-                            <Crown size={18} color="var(--amber-400)" />
+                            <span className="badge badge-primary" style={{ fontWeight: 800 }}>#1</span>
                           ) : isTop2 ? (
-                            <Medal size={18} color="#CBD5E1" />
+                            <span className="badge badge-secondary" style={{ fontWeight: 700 }}>#2</span>
                           ) : isTop3 ? (
-                            <Medal size={18} color="#D97706" />
+                            <span className="badge badge-secondary" style={{ fontWeight: 700 }}>#3</span>
                           ) : (
-                            <span style={{ fontWeight: 700, color: 'var(--text-muted)', marginLeft: '4px' }}>
+                            <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)', marginLeft: '4px' }}>
                               #{entry.rank}
                             </span>
                           )}
                         </div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{entry.full_name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{entry.email}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{entry.full_name}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{entry.email}</div>
                       </td>
                       <td>
-                        <span className="badge badge-cyan">Sec {entry.section}</span>
+                        <span className="badge badge-primary">Sec {entry.section}</span>
                       </td>
                       <td>
-                        <span className="badge badge-purple">Yr {entry.academic_year}</span>
+                        <span className="badge badge-secondary">Yr {entry.academic_year}</span>
                       </td>
                       <td>
-                        <strong style={{ color: 'var(--cyan-400)' }}>{entry.phase1_score} pts</strong>
+                        <strong style={{ color: 'var(--color-primary)' }}>{entry.phase1_score} pts</strong>
                       </td>
                       <td>
-                        <strong style={{ color: 'var(--purple-400)' }}>{entry.phase2_score} pts</strong>
+                        <strong style={{ color: 'var(--color-primary)' }}>{entry.phase2_score} pts</strong>
                       </td>
                       <td>
-                        <span className={`badge ${entry.phase3_solved > 0 ? 'badge-emerald' : 'badge-rose'}`}>
+                        <span className={`badge ${entry.phase3_solved > 0 ? 'badge-success' : 'badge-secondary'}`}>
                           {entry.phase3_solved} / 3 Solved
                         </span>
                       </td>
                       <td>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF' }}>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-text)' }}>
                           {entry.total_score}
                         </span>
                       </td>
@@ -436,7 +456,7 @@ export const Leaderboard: React.FC = () => {
         /* Phase-Specific Run Leaderboard */
         <div className="custom-table-container">
           {loadingPhase ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
               <div className="spinner" style={{ width: '32px', height: '32px', margin: '0 auto 0.75rem auto' }} />
               Loading {activeTab.toUpperCase()} run standings...
             </div>
@@ -456,7 +476,7 @@ export const Leaderboard: React.FC = () => {
               <tbody>
                 {filteredPhaseEntries.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
                       No participant attempts recorded for {activeTab.toUpperCase()} yet.
                     </td>
                   </tr>
@@ -471,27 +491,27 @@ export const Leaderboard: React.FC = () => {
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             {isTop1 ? (
-                              <Crown size={18} color="var(--amber-400)" />
+                              <span className="badge badge-primary" style={{ fontWeight: 800 }}>#1</span>
                             ) : isTop2 ? (
-                              <Medal size={18} color="#CBD5E1" />
+                              <span className="badge badge-secondary" style={{ fontWeight: 700 }}>#2</span>
                             ) : isTop3 ? (
-                              <Medal size={18} color="#D97706" />
+                              <span className="badge badge-secondary" style={{ fontWeight: 700 }}>#3</span>
                             ) : (
-                              <span style={{ fontWeight: 700, color: 'var(--text-muted)', marginLeft: '4px' }}>
+                              <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)', marginLeft: '4px' }}>
                                 #{entry.rank}
                               </span>
                             )}
                           </div>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{entry.full_name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{entry.email}</div>
+                          <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{entry.full_name}</div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{entry.email}</div>
                         </td>
                         <td>
-                          <span className="badge badge-cyan">Sec {entry.section}</span>
+                          <span className="badge badge-primary">Sec {entry.section}</span>
                         </td>
                         <td>
-                          <span className="badge badge-purple">Yr {entry.academic_year}</span>
+                          <span className="badge badge-secondary">Yr {entry.academic_year}</span>
                         </td>
                         <td>
                           <span className="badge badge-secondary" style={{ fontSize: '0.75rem' }}>
@@ -499,14 +519,14 @@ export const Leaderboard: React.FC = () => {
                           </span>
                         </td>
                         <td>
-                          <strong style={{ color: 'var(--cyan-400)', fontSize: '1.05rem' }}>
+                          <strong style={{ color: 'var(--color-primary)', fontSize: '1.05rem' }}>
                             {entry.score} pts
                           </strong>
                         </td>
-                        <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        <td style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
                           {entry.detail || '—'}
                           {entry.time_spent_seconds && (
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
                               Time: {entry.time_spent_seconds}s
                             </div>
                           )}

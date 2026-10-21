@@ -11,16 +11,14 @@ import {
   Save,
   Shield,
   KeyRound,
-  CheckCircle2,
-  AlertCircle,
   Server,
   Cpu,
   Database
 } from 'lucide-react';
 
 export const Settings: React.FC = () => {
-  const { user, updatePassword } = useAuth();
-  const [settings, setSettings] = useState<CompetitionSettings | null>(null);
+  const { updatePassword } = useAuth();
+  const [, setSettings] = useState<CompetitionSettings | null>(null);
   const [eventName, setEventName] = useState('Tech Expert 2K26');
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -85,48 +83,48 @@ export const Settings: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
       {/* Header */}
       <div>
-        <div className="badge badge-purple" style={{ marginBottom: '0.4rem' }}>
+        <div className="badge badge-primary" style={{ marginBottom: '0.4rem' }}>
           Event Parameters
         </div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Platform Settings</h1>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>Platform Settings</h1>
+        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
           Configure global event titles, monitor system infrastructure, and update administrator credentials.
         </div>
       </div>
 
       {/* Infrastructure Diagnostics */}
-      <div className="glass-card" style={{ padding: '1.75rem' }}>
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Server size={18} color="var(--cyan-400)" /> System Infrastructure Status
+      <div className="card" style={{ padding: '1.75rem' }}>
+        <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)' }}>
+          <Server size={18} color="var(--color-primary)" /> System Infrastructure Status
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius-sm)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'var(--color-surface-secondary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Database size={16} color="var(--cyan-400)" />
-              <span>Supabase PostgreSQL & RLS</span>
+              <Database size={16} color="var(--color-primary)" />
+              <span style={{ fontWeight: 500, color: 'var(--color-text)' }}>Supabase PostgreSQL & RLS</span>
             </div>
-            <span className={`badge ${isSupabaseConfigured ? 'badge-emerald' : 'badge-amber'}`}>
+            <span className={`badge ${isSupabaseConfigured ? 'badge-success' : 'badge-warning'}`}>
               {isSupabaseConfigured ? 'CONNECTED' : 'LOCAL PREVIEW MODE'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius-sm)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'var(--color-surface-secondary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Cpu size={16} color="var(--purple-400)" />
-              <span>Google Gemini AI Evaluation Engine</span>
+              <Cpu size={16} color="var(--color-primary)" />
+              <span style={{ fontWeight: 500, color: 'var(--color-text)' }}>Google Gemini AI Evaluation Engine</span>
             </div>
-            <span className="badge badge-emerald">
+            <span className="badge badge-success">
               GEMINI 2.5 FLASH CONFIGURED
             </span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius-sm)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', backgroundColor: 'var(--color-surface-secondary)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Shield size={16} color="var(--emerald-400)" />
-              <span>Host Institution</span>
+              <Shield size={16} color="var(--color-primary)" />
+              <span style={{ fontWeight: 500, color: 'var(--color-text)' }}>Host Institution</span>
             </div>
-            <span className="badge badge-cyan">
+            <span className="badge badge-primary">
               Sri Venkateswara College of Engineering (SVCE)
             </span>
           </div>
@@ -134,9 +132,9 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* Competition Details */}
-      <form onSubmit={handleSaveSettings} className="glass-card" style={{ padding: '1.75rem' }}>
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <SettingsIcon size={18} color="var(--purple-400)" /> General Event Information
+      <form onSubmit={handleSaveSettings} className="card" style={{ padding: '1.75rem' }}>
+        <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)' }}>
+          <SettingsIcon size={18} color="var(--color-primary)" /> General Event Information
         </h3>
 
         {savedSuccess && <div className="alert alert-success">Settings saved successfully!</div>}
@@ -152,15 +150,15 @@ export const Settings: React.FC = () => {
           />
         </div>
 
-        <button type="submit" disabled={saving} className="btn btn-primary">
+        <button type="submit" disabled={saving} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
           <Save size={15} /> {saving ? 'Saving...' : 'Save Configuration'}
         </button>
       </form>
 
       {/* Admin Security / Password Change */}
-      <form onSubmit={handleChangePassword} className="glass-card" style={{ padding: '1.75rem' }}>
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <KeyRound size={18} color="var(--amber-400)" /> Administrator Password Management
+      <form onSubmit={handleChangePassword} className="card" style={{ padding: '1.75rem' }}>
+        <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)' }}>
+          <KeyRound size={18} color="var(--color-warning)" /> Administrator Password Management
         </h3>
 
         {passwordMsg && (
@@ -193,7 +191,7 @@ export const Settings: React.FC = () => {
           />
         </div>
 
-        <button type="submit" disabled={updatingPass} className="btn btn-accent">
+        <button type="submit" disabled={updatingPass} className="btn btn-primary">
           {updatingPass ? 'Updating Credentials...' : 'Update Password'}
         </button>
       </form>
